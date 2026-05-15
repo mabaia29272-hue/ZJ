@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智鉴</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --surface2: #f0ede8;
+    --border: #e0ddd6;
+    --border2: #ccc9c0;
+    --text1: #1a1916;
+    --text2: #5a584f;
+    --text3: #8f8d84;
+    --green: #1a7a54;
+    --green-bg: #e8f5ee;
+    --blue: #1a5fa8;
+    --blue-bg: #e6f0fb;
+    --amber: #9a6200;
+    --amber-bg: #fef3dc;
+    --red: #c0392b;
+    --red-bg: #fdecea;
+    --teal: #0f7b6c;
+    --teal-bg: #e3f4f1;
+    --info-bg: #e8f0fe;
+    --info: #1a5fa8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text1);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .page { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  .header { border-bottom: 1px solid var(--border2); padding-bottom: 1.25rem; margin-bottom: 1.5rem; }
+  .meta { font-size: 11px; color: var(--text3); letter-spacing: 0.06em; margin-bottom: 6px; }
+  .title-row { display: flex; align-items: baseline; gap: 14px; margin-bottom: 4px; }
+  .title { font-size: 24px; font-weight: 600; color: var(--text1); letter-spacing: -0.02em; }
+  .title-en { font-size: 11px; color: var(--text3); font-family: 'SF Mono', 'Fira Mono', monospace; letter-spacing: 0.05em; }
+  .subtitle { font-size: 13px; color: var(--text2); margin-top: 2px; }
+
+  .tab-bar { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-top: 1.25rem; }
+  .tab-btn {
+    font-size: 13px; padding: 9px 20px; background: none; border: none;
+    border-bottom: 2px solid transparent; cursor: pointer; color: var(--text2);
+    font-family: inherit; margin-bottom: -1px; transition: color 0.15s;
+  }
+  .tab-btn:hover { color: var(--text1); }
+  .tab-btn.active { color: var(--text1); font-weight: 600; border-bottom: 2px solid var(--text1); }
+  .tab-panel { display: none; padding-top: 1.5rem; }
+  .tab-panel.active { display: block; }
+
+  /* 定位说明条 */
+  .layer-tip {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 14px; margin-bottom: 1.25rem; font-size: 12px; color: var(--text2);
+  }
+  .layer-tip .tip-tag {
+    font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .tip-tag.intro { background: var(--surface2); color: var(--text3); border: 1px solid var(--border2); }
+  .tip-tag.core { background: var(--blue-bg); color: var(--blue); border: 1px solid #b3cef0; }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; }
+  .stat-num { font-size: 26px; font-weight: 600; color: var(--text1); }
+  .stat-lbl { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+  .tech-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+  .tech-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; }
+  .tech-card.featured { border-color: var(--blue); border-width: 2px; }
+  .tech-name { font-size: 14px; font-weight: 600; color: var(--text1); margin-bottom: 2px; }
+  .tech-en { font-size: 11px; color: var(--text3); margin-bottom: 10px; }
+  .badge { font-size: 10px; padding: 2px 7px; border-radius: 5px; background: var(--info-bg); color: var(--info); margin-left: 6px; vertical-align: middle; font-weight: 500; }
+  .bars { display: flex; flex-direction: column; gap: 7px; margin-bottom: 10px; }
+  .bar-row { display: flex; align-items: center; gap: 8px; }
+  .bar-lbl { font-size: 11px; color: var(--text2); width: 52px; text-align: right; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; }
+  .bar-val { font-size: 11px; color: var(--text3); width: 30px; text-align: right; }
+  .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tag-group-lbl { font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .tag { font-size: 10px; padding: 2px 7px; border-radius: 5px; }
+  .tag.pro { background: var(--green-bg); color: var(--green); }
+  .tag.con { background: var(--red-bg); color: var(--red); }
+
+  .matrix-wrap { overflow-x: auto; margin-bottom: 1.5rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { font-size: 11px; font-weight: 600; color: var(--text2); padding: 9px 12px; border-bottom: 1px solid var(--border2); text-align: center; white-space: nowrap; background: var(--surface2); }
+  th:first-child { text-align: left; border-radius: 8px 0 0 0; }
+  th:last-child { border-radius: 0 8px 0 0; }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); text-align: center; color: var(--text1); }
+  td:first-child { text-align: left; font-weight: 500; color: var(--text2); }
+  tr.highlight td { background: var(--info-bg); }
+  tr:last-child td { border-bottom: none; }
+  .stars { color: var(--amber); }
+
+  .chart-section { margin-bottom: 1.5rem; }
+  .chart-title { font-size: 13px; font-weight: 600; color: var(--text1); margin-bottom: 12px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 10px; }
+  .leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+  .leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+  /* 案例检索 */
+  .search-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .search-bar input {
+    flex: 1; min-width: 180px; padding: 8px 12px; font-size: 13px; font-family: inherit;
+    border: 1px solid var(--border2); border-radius: 8px; background: var(--surface);
+    color: var(--text1); outline: none;
+  }
+  .search-bar input:focus { border-color: var(--blue); }
+  .filter-row { display: flex; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .filter-chip {
+    font-size: 11px; padding: 5px 12px; border-radius: 20px; cursor: pointer;
+    border: 1px solid var(--border2); background: var(--surface); color: var(--text2);
+    transition: all 0.12s;
+  }
+  .filter-chip.active { background: var(--text1); color: #fff; border-color: var(--text1); }
+  .case-count { font-size: 12px; color: var(--text3); margin-bottom: 12px; }
+  .case-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+  .case-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1rem 1.25rem; cursor: pointer; transition: border-color 0.15s;
+  }
+  .case-card:hover { border-color: var(--blue); }
+  .case-industry { font-size: 11px; color: var(--text3); margin-bottom: 3px; }
+  .case-company { font-size: 15px; font-weight: 600; color: var(--text1); margin-bottom: 10px; }
+  .case-row { margin-bottom: 8px; }
+  .case-row-lbl { font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+  .fraud-tag { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 5px; background: var(--red-bg); color: var(--red); margin: 2px; }
+  .ai-tag { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 5px; background: var(--amber-bg); color: var(--amber); margin: 2px; }
+  .anti-tag-c { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 5px; background: var(--teal-bg); color: var(--teal); margin: 2px; }
+  .no-result { text-align: center; padding: 3rem 1rem; color: var(--text3); font-size: 13px; }
+
+  /* 案例弹出详情 */
+  .case-detail-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100;
+    align-items: center; justify-content: center; padding: 1rem;
+  }
+  .case-detail-overlay.open { display: flex; }
+  .case-detail-box {
+    background: var(--surface); border-radius: 14px; padding: 1.5rem;
+    max-width: 560px; width: 100%; max-height: 85vh; overflow-y: auto;
+    position: relative;
+  }
+  .detail-close {
+    position: absolute; top: 14px; right: 14px; background: none; border: none;
+    font-size: 18px; cursor: pointer; color: var(--text3); line-height: 1;
+  }
+  .detail-company { font-size: 20px; font-weight: 600; color: var(--text1); margin-bottom: 4px; }
+  .detail-meta { font-size: 12px; color: var(--text3); margin-bottom: 1.25rem; }
+  .detail-section { margin-bottom: 1rem; }
+  .detail-section-lbl { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; border-left: 3px solid var(--border2); padding-left: 8px; }
+  .detail-section-lbl.fraud { border-color: var(--red); color: var(--red); }
+  .detail-section-lbl.ai { border-color: var(--amber); color: var(--amber); }
+  .detail-section-lbl.anti { border-color: var(--teal); color: var(--teal); }
+  .detail-desc { font-size: 12px; color: var(--text2); line-height: 1.7; margin-top: 6px; }
+  .detail-penalty { background: var(--surface2); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: var(--text2); margin-top: 8px; }
+
+  /* 推荐 */
+  .rec-form { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; }
+  .form-title { font-size: 14px; font-weight: 600; color: var(--text1); margin-bottom: 1.1rem; }
+  .form-row { margin-bottom: 1rem; }
+  .form-row label { font-size: 13px; font-weight: 500; color: var(--text1); display: block; margin-bottom: 5px; }
+  select {
+    width: 100%; padding: 8px 10px; font-size: 13px; font-family: inherit;
+    border: 1px solid var(--border2); border-radius: 8px; background: var(--surface);
+    color: var(--text1); outline: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%238f8d84' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+  }
+  select:focus { border-color: var(--blue); }
+  .gen-btn {
+    width: 100%; padding: 11px; font-size: 14px; font-weight: 600; font-family: inherit;
+    background: var(--text1); color: #fff; border: none; border-radius: 8px;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .gen-btn:hover { background: #333; }
+  .rec-result { display: none; background: var(--surface); border: 2px solid var(--blue); border-radius: 12px; padding: 1.25rem; }
+  .rec-result.show { display: block; }
+  .rec-heading { font-size: 14px; font-weight: 600; color: var(--text1); margin-bottom: 1rem; }
+  .rec-stack { display: flex; flex-direction: column; gap: 8px; }
+  .rec-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; background: var(--surface2); border-radius: 8px; }
+  .rec-rank { font-size: 12px; font-weight: 600; color: var(--text3); width: 22px; flex-shrink: 0; padding-top: 1px; }
+  .rec-tech { font-size: 13px; font-weight: 600; color: var(--text1); }
+  .rec-reason { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .rec-note { font-size: 12px; color: var(--text2); padding-top: 1rem; border-top: 1px solid var(--border); margin-top: 1rem; }
+
+  .insight-row { display: flex; gap: 16px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .insight-col { flex: 1; min-width: 260px; }
+
+  @media (max-width: 640px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .tech-grid { grid-template-columns: 1fr; }
+    .case-grid { grid-template-columns: 1fr; }
+    .insight-row { flex-direction: column; }
+    .tab-btn { padding: 8px 12px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="meta">反造假技术研究 · 中南财经政法大学</div>
+    <div class="title-row">
+      <div class="title">智鉴</div>
+      <div class="title-en">ZHIJIAN · Anti-Fraud Tech Analysis</div>
+    </div>
+    <div class="subtitle">基于100家A股上市公司违规案例数据，系统评估主流及前沿反财务造假技术，提供案例检索与定制化防控方案</div>
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('overview', this)">技术全景</button>
+      <button class="tab-btn" onclick="switchTab('compare', this)">对比矩阵</button>
+      <button class="tab-btn" onclick="switchTab('cases', this)">案例检索</button>
+      <button class="tab-btn" onclick="switchTab('recommend', this)">方案推荐</button>
+    </div>
+  </div>
+
+  <!-- Tab: 技术全景 -->
+  <div id="overview" class="tab-panel active">
+    <div class="layer-tip">
+      <span class="tip-tag intro">介绍层</span>
+      本模块与「对比矩阵」共同构成技术知识入口，帮助读者建立对8种反造假技术的基本认知，为后续案例检索与方案推荐提供技术背景。
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num">8</div><div class="stat-lbl">核心反造假技术</div></div>
+      <div class="stat-card"><div class="stat-num">100</div><div class="stat-lbl">参考案例企业</div></div>
+      <div class="stat-card"><div class="stat-num">13</div><div class="stat-lbl">覆盖行业类型</div></div>
+      <div class="stat-card"><div class="stat-num">3</div><div class="stat-lbl">防控维度</div></div>
+    </div>
+    <div class="tech-grid">
+      <div class="tech-card">
+        <div class="tech-name">信息披露异常分布检验</div>
+        <div class="tech-en">Statistical Anomaly Detection</div>
+        <div class="bars">
+          <div class="bar-row"><span class="bar-lbl">准确率</span><div class="bar-track"><div class="bar-fill" style="width:70%;background:#1a7a54;"></div></div><span class="bar-val">70%</span></div>
+          <div class="bar-row"><span class="bar-lbl">可解释性</span><div class="bar-track"><div class="bar-fill" style="width:90%;background:#1a5fa8;"></div></div><span class="bar-val">90%</span></div>
+          <div class="bar-row"><span class="bar-lbl">实施成本</span><div class="bar-track"><div class="bar-fill" style="width:85%;background:#9a6200;"></div></div><span class="bar-val">低</span></div>
+        </div>
+        <div class="pros-cons">
+          <div><div class="tag-group-lbl">优势</div><div class="tags"><span class="tag pro">成本低</span><span class="tag pro">可解释</span><span class="tag pro">行业适配</span></div></div>
+          <div><div class="tag-group-lbl">局限</div><div class="tags"><span class="tag con">样本依赖</span><span class="tag con">静态规则</span></div></div>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-name">自编码器神经网络</div>
+        <div class="tech-en">Autoencoder (AE) Neural Network</div>
+        <div class="bars">
+          <div class="bar-row"><span class="bar-lbl">准确率</span><div class="bar-track"><div class="bar-fill" style="width:84%;background:#1a7a54;"></div></div><span class="bar-val">84%</span></div>
+          <div class="bar-row"><span class="bar-lbl">可解释性</span><div class="bar-track"><div class="bar-fill" style="width:40%;background:#1a5fa8;"></div></div><span class="bar-val">40%</span></div>
+          <div class="bar-row"><span class="bar-lbl">实施成本</span><div class="bar-track"><div class="bar-fill" style="width:45%;background:#9a6200;"></div></div><span class="bar-val">中</span></div>
+        </div>
+        <div class="pros-cons">
+          <div><div class="tag-group-lbl">优势</div><div class="tags"><span class="tag pro">非线性建模</span><span class="tag pro">无监督</span></div></div>
+          <div><div class="tag-group-lbl">局限</div><div class="tags"><span class="tag con">黑盒特性</span><span class="tag con">数据量要求高</span></div></div>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-name">支持向量机</div>
+        <div class="tech-en">Support Vector Machine (SVM)</div>
+        <div class="bars">
+          <div class="bar-row"><span class="bar-lbl">准确率</span><div class="bar-track"><div class="bar-fill" style="width:78%;background:#1a7a54;"></div></div><span class="bar-val">78%</span></div>
+          <div class="bar-row"><span class="bar-lbl">可解释性</span><div class="bar-track"><div class="bar-fill" style="width:65%;background:#1a5fa8;"></div></div><span class="bar-val">65%</span></div>
+          <div class="bar-row"><span class="bar-lbl">实施成本</span><div class="bar-track"><div class="bar-fill" style="width:70%;background:#9a6200;"></div></div><span class="bar-val">中低</span></div>
+        </div>
+        <div class="pros-cons">
+          <div><div class="tag-group-lbl">优势</div><div class="tags"><span class="tag pro">小样本适用</span><span class="tag pro">无需标注</span></div></div>
+          <div><div class="tag-group-lbl">局限</div><div class="tags"><span class="tag con">参数敏感</span><span class="tag con">大数据集慢</span></div></div>
+        </div>
+      </div>
+      <div class="tech-card featured">
+        <div class="tech-name">深度强化学习检测系统<span class="badge">推荐</span></div>
+        <div class="tech-en">Deep Reinforcement Learning (DRL)</div>
+        <div class="bars">
+          <div class="bar-row"><span class="bar-lbl">准确率</span><div class="bar-track"><div class="bar-fill" style="width:99%;background:#1a7a54;"></div></div><span class="bar-val">99%</span></div>
+          <div class="bar-row"><span class="bar-lbl">可解释性</span><div class="bar-track"><div class="bar-fill" style="width:35%;background:#1a5fa8;"></div></div><span class="bar-val">35%</span></div>
+          <div class="bar-row"><span class="bar-lbl">实施成本</span><div class="bar-track"><div class="bar-fill" style="width:20%;background:#9a6200;"></div></div><span class="bar-val">高</span></div>
+        </div>
+        <div class="pros-cons">
+          <div><div class="tag-group-lbl">优势</div><div class="tags"><span class="tag pro">最高精度</span><span class="tag pro">自适应</span></div></div>
+          <div><div class="tag-group-lbl">局限</div><div class="tags"><span class="tag con">构建复杂</span><span class="tag con">初期投入高</span></div></div>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-name">区块链数字指纹溯源</div>
+        <div class="tech-en">Blockchain Traceability</div>
+        <div class="bars">
+          <div class="bar-row"><span class="bar-lbl">准确率</span><div class="bar-track"><div class="bar-fill" style="width:95%;background:#1a7a54;"></div></div><span class="bar-val">95%</span></div>
+          <div class="bar-row"><span class="bar-lbl">可解释性</span><div class="bar-track"><div class="bar-fill" style="width:95%;background:#1a5fa8;"></div></div><span class="bar-val">95%</span></div>
+          <div class="bar-row"><span class="bar-lbl">实施成本</span><div class="bar-track"><div class="bar-fill" style="width:25%;background:#9a6200;"></div></div><span class="bar-val">高</span></div>
+        </div>
+        <div class="pros-cons">
+          <div><div class="tag-group-lbl">优势</div><div class="tags"><span class="tag pro">不可篡改</span><span class="tag pro">全程溯源</span><span class="tag pro">操作留痕</span></div></div>
+          <div><div class="tag-group-lbl">局限</div><div class="tags"><span class="tag con">部署成本高</span><span class="tag con">需企业配合接入</span></div></div>
+        </div>
+        <div style="margin-top:10px;padding:8px 10px;background:#e3f4f1;border-radius:6px;font-size:11px;color:#0f7b6c;line-height:1.6;">
+          ⛓️ 配套「链证留痕」演示系统，可查看该技术在真实财务场景中的操作留痕与审计日志运作方式。
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-name">NLP 舆情监测</div>
+        <div class="tech-en">NLP News &amp; Sentiment Monitoring</div>
+        <div class="bars">
+          <div class="bar-row"><span class="bar-lbl">准确率</span><div class="bar-track"><div class="bar-fill" style="width:68%;background:#1a7a54;"></div></div><span class="bar-val">68%</span></div>
+          <div class="bar-row"><span class="bar-lbl">可解释性</span><div class="bar-track"><div class="bar-fill" style="width:72%;background:#1a5fa8;"></div></div><span class="bar-val">72%</span></div>
+          <div class="bar-row"><span class="bar-lbl">实施成本</span><div class="bar-track"><div class="bar-fill" style="width:60%;background:#9a6200;"></div></div><span class="bar-val">中</span></div>
+        </div>
+        <div class="pros-cons">
+          <div><div class="tag-group-lbl">优势</div><div class="tags"><span class="tag pro">实时预警</span><span class="tag pro">覆盖广</span></div></div>
+          <div><div class="tag-group-lbl">局限</div><div class="tags"><span class="tag con">噪声大</span><span class="tag con">误报率高</span></div></div>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-name">交易模式分析</div>
+        <div class="tech-en">Transaction Pattern Analysis</div>
+        <div class="bars">
+          <div class="bar-row"><span class="bar-lbl">准确率</span><div class="bar-track"><div class="bar-fill" style="width:80%;background:#1a7a54;"></div></div><span class="bar-val">80%</span></div>
+          <div class="bar-row"><span class="bar-lbl">可解释性</span><div class="bar-track"><div class="bar-fill" style="width:80%;background:#1a5fa8;"></div></div><span class="bar-val">80%</span></div>
+          <div class="bar-row"><span class="bar-lbl">实施成本</span><div class="bar-track"><div class="bar-fill" style="width:55%;background:#9a6200;"></div></div><span class="bar-val">中</span></div>
+        </div>
+        <div class="pros-cons">
+          <div><div class="tag-group-lbl">优势</div><div class="tags"><span class="tag pro">跨行业通用</span><span class="tag pro">可解释</span></div></div>
+          <div><div class="tag-group-lbl">局限</div><div class="tags"><span class="tag con">需历史基准</span><span class="tag con">跨主体分析复杂</span></div></div>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-name">多模态融合检测</div>
+        <div class="tech-en">Multimodal Fusion Detection</div>
+        <div class="bars">
+          <div class="bar-row"><span class="bar-lbl">准确率</span><div class="bar-track"><div class="bar-fill" style="width:92%;background:#1a7a54;"></div></div><span class="bar-val">92%</span></div>
+          <div class="bar-row"><span class="bar-lbl">可解释性</span><div class="bar-track"><div class="bar-fill" style="width:55%;background:#1a5fa8;"></div></div><span class="bar-val">55%</span></div>
+          <div class="bar-row"><span class="bar-lbl">实施成本</span><div class="bar-track"><div class="bar-fill" style="width:15%;background:#9a6200;"></div></div><span class="bar-val">最高</span></div>
+        </div>
+        <div class="pros-cons">
+          <div><div class="tag-group-lbl">优势</div><div class="tags"><span class="tag pro">文本+图像+音频</span><span class="tag pro">难规避</span></div></div>
+          <div><div class="tag-group-lbl">局限</div><div class="tags"><span class="tag con">最高复杂度</span><span class="tag con">成本最高</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: 对比矩阵 -->
+  <div id="compare" class="tab-panel">
+    <div class="layer-tip">
+      <span class="tip-tag intro">介绍层</span>
+      本模块通过雷达图、评分矩阵与场景匹配图，对8种技术进行横向深度比较，帮助读者理解各技术的适用边界，为「方案推荐」模块的结论提供量化依据。
+    </div>
+    <div class="chart-section">
+      <div class="chart-title">技术维度雷达图（关键技术对比）</div>
+      <div class="legend">
+        <span class="leg-item"><span class="leg-dot" style="background:#1a7a54;"></span>AE神经网络</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#1a5fa8;"></span>深度强化学习</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#9a6200;"></span>区块链溯源</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#b5456e;"></span>交易模式分析</span>
+      </div>
+      <div style="position:relative;width:100%;height:340px;">
+        <canvas id="radarChart"></canvas>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="chart-title" style="margin-bottom:12px;">综合评分矩阵</div>
+    <div class="matrix-wrap">
+      <table>
+        <thead><tr>
+          <th>技术方法</th><th>准确率</th><th>可解释性</th><th>实时性</th><th>实施难度</th><th>适用规模</th><th>综合推荐</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>信息披露异常检验</td><td>●●●</td><td>●●●●●</td><td>●●●</td><td>低</td><td>中小型</td><td class="stars">★★★★</td></tr>
+          <tr><td>自编码器神经网络</td><td>●●●●</td><td>●●</td><td>●●●●</td><td>中</td><td>中大型</td><td class="stars">★★★★</td></tr>
+          <tr><td>支持向量机</td><td>●●●●</td><td>●●●</td><td>●●●</td><td>低中</td><td>中型</td><td class="stars">★★★</td></tr>
+          <tr class="highlight"><td><strong>深度强化学习 ▲推荐</strong></td><td>●●●●●</td><td>●●</td><td>●●●●●</td><td>高</td><td>大型</td><td style="color:#1a5fa8;font-weight:700;">★★★★★</td></tr>
+          <tr><td>区块链溯源</td><td>●●●●●</td><td>●●●●●</td><td>●●●</td><td>高</td><td>大型</td><td class="stars">★★★★</td></tr>
+          <tr><td>NLP舆情监测</td><td>●●●</td><td>●●●●</td><td>●●●●●</td><td>中</td><td>全规模</td><td class="stars">★★★</td></tr>
+          <tr><td>交易模式分析</td><td>●●●●</td><td>●●●●</td><td>●●●●</td><td>中</td><td>全规模</td><td class="stars">★★★★</td></tr>
+          <tr><td>多模态融合检测</td><td>●●●●●</td><td>●●●</td><td>●●●●</td><td>最高</td><td>大型</td><td class="stars">★★★★</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="chart-section">
+      <div class="chart-title">造假类型 × 最佳反制技术匹配得分</div>
+      <div class="legend">
+        <span class="leg-item"><span class="leg-dot" style="background:#b5456e;"></span>交易模式分析</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#1a7a54;"></span>AE神经网络</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#1a5fa8;"></span>NLP舆情监测</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#9a6200;"></span>区块链溯源</span>
+      </div>
+      <div style="position:relative;width:100%;height:280px;">
+        <canvas id="barChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: 案例检索（核心应用层） -->
+  <div id="cases" class="tab-panel">
+    <div class="layer-tip">
+      <span class="tip-tag core">应用核心</span>
+      本模块为平台核心应用功能之一。基于100家A股上市公司违规处罚案例，支持按公司名称、行业、造假类型多维检索，每个案例展示「原有造假手段 → AI升级路径 → 有效反制技术」完整三列对照。
+    </div>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="搜索公司名称、行业或造假手段..." oninput="filterCases()">
+    </div>
+    <div class="filter-row" id="filterRow"></div>
+    <div class="case-count" id="caseCount"></div>
+    <div class="case-grid" id="caseGrid"></div>
+    <div class="no-result" id="noResult" style="display:none">未找到匹配案例，请尝试其他关键词</div>
+  </div>
+
+  <!-- Tab: 方案推荐（核心应用层） -->
+  <div id="recommend" class="tab-panel">
+    <div class="layer-tip">
+      <span class="tip-tag core">应用核心</span>
+      本模块为平台核心应用功能之一。输入企业规模、风险类型、数据条件与预算四项特征，系统基于90种场景决策矩阵输出优先级排序的定制化技术组合方案。
+    </div>
+    <div class="rec-form">
+      <div class="form-title">输入企业特征，获取定制化反造假技术方案</div>
+      <div class="form-row">
+        <label>企业规模</label>
+        <select id="sel-size">
+          <option value="">请选择...</option>
+          <option value="large">大型（>1000人，上市公司）</option>
+          <option value="medium">中型（100-999人）</option>
+          <option value="small">小型（&lt;100人）</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>主要防控风险</label>
+        <select id="sel-risk">
+          <option value="">请选择...</option>
+          <option value="revenue">收入虚增 / 利润操纵</option>
+          <option value="asset">资产减值操纵</option>
+          <option value="disclosure">信息披露造假</option>
+          <option value="fund">资金违规 / 关联方交易</option>
+          <option value="all">全面风险防控</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>数据可用性</label>
+        <select id="sel-data">
+          <option value="">请选择...</option>
+          <option value="rich">数据丰富（历史完整，可获取行业数据）</option>
+          <option value="limited">数据有限（仅财务报表，无行业对标）</option>
+        </select>
+      </div>
+      <div class="form-row" style="margin-bottom:1.25rem;">
+        <label>预算级别</label>
+        <select id="sel-budget">
+          <option value="">请选择...</option>
+          <option value="high">充足（可引入专项系统）</option>
+          <option value="medium">中等（现有IT团队可承接）</option>
+          <option value="low">有限（低成本优先）</option>
+        </select>
+      </div>
+      <button class="gen-btn" onclick="generateRec()">生成推荐方案 →</button>
+    </div>
+    <div id="rec-result" class="rec-result">
+      <div class="rec-heading" id="rec-heading">推荐技术组合</div>
+      <div class="rec-stack" id="rec-stack"></div>
+      <div class="rec-note" id="rec-note"></div>
+      <div id="chain-tip" style="display:none;margin-top:12px;padding:10px 14px;background:#e3f4f1;border:1px solid #9fd5c8;border-radius:8px;font-size:12px;color:#0f7b6c;line-height:1.7;">
+        ⛓️ <strong>区块链数字指纹溯源</strong>已列入推荐方案。本系统配套提供「链证留痕」演示系统，模拟财务操作全程上链存证的实际运作逻辑，展示"不以最终财报为唯一评判标准"的审计新范式。该系统作为本平台独立补充成果，与智鉴评估平台共同构成从技术选型到技术落地的完整链条。
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 案例详情弹窗 -->
+<div class="case-detail-overlay" id="detailOverlay" onclick="closeDetail(event)">
+  <div class="case-detail-box" id="detailBox">
+    <button class="detail-close" onclick="closeDetailDirect()">✕</button>
+    <div class="detail-company" id="dCompany"></div>
+    <div class="detail-meta" id="dMeta"></div>
+    <div class="detail-section">
+      <div class="detail-section-lbl fraud">原有造假手段</div>
+      <div id="dFraud"></div>
+      <div class="detail-desc" id="dFraudDesc"></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-lbl ai">AI 升级路径</div>
+      <div id="dAi"></div>
+      <div class="detail-desc" id="dAiDesc"></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-lbl anti">有效反制技术</div>
+      <div id="dAnti"></div>
+      <div class="detail-desc" id="dAntiDesc"></div>
+    </div>
+    <div class="detail-penalty" id="dPenalty"></div>
+  </div>
+</div>
+
+<script>
+// ─── 案例数据库（20家代表性样本）───
+const CASES = [
+  { company:"神州高铁", industry:"交通/装备", industryCode:"transport",
+    fraud:["资产减值准备操纵"],
+    ai:["AI生成减值测试参数底稿", "AI模拟行业景气基准数据", "AI自动优化临界值参数"],
+    anti:["行业减值参数基准对比", "全量复算审计模型", "资产组划分逻辑追踪"],
+    fraudType:"asset", year:2020, severity:"重大",
+    fraudDesc:"神州高铁轨道交通运营管理有限公司作为轨道交通运营管理行业的上市公司，其业务涉及轨道交通运营管理装备、维保服务及整体解决方案， 具有项目周期长、资产结构复杂、客户集中度高（主要为国铁集团及各地地铁公司）的行业特点。公司利用轨道交通装备制造与工程服务并行的 业务特性，通过商誉减值测试参数操纵、存货跌价准备该提不提、应收账款信用减值测试“量身定制” 、长期股权投资减值测算不准确等手段，在 2020 至 ",
+    aiDesc:"AI依托交通/装备行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对神州高铁的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"神州高铁原财务造假手段来源于中国证监会北京监管局官网：https://www.csrc.gov.cn/beijing/c105547/c7418458/content.shtml" },
+  { company:"华塑控股", industry:"建材/园林", industryCode:"material",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI生成虚假重大事项说明", "AI优化信息披露完整性", "AI模拟合规自查报告"],
+    anti:["重大性阈值合规检测", "监管报告真实性核查", "信息完整性量化评估"],
+    fraudType:"disclosure", year:2018, severity:"一般",
+    fraudDesc:"华塑控股股份有限公司作为建材及园林绿化行业企业，主营业务涵盖塑料型材、门窗生产及园林工程施工，具有工程项目周期长、资金占用 大、客户分散等业务特点。公司在 2010 年至 2012 年期间，利用建材行业交易复杂、关联方隐蔽、担保事项众多的行业特性，通过未及时披露重 大合同与担保事项、年报虚假陈述隐瞒关键交易、少计提坏账准备虚增利润、低价转让股权隐瞒亏损、股改受赠资金违规划转等手段，系统性进 行信息",
+    aiDesc:"AI依托建材/园林行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对华塑控股的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"华塑控股原财务造假手段来源于中国证监会官网：https://www.csrc.gov.cn/csrc/c101928/c1043009/content.shtml" },
+  { company:"珠海中富", industry:"包装制造", industryCode:"manufacture",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI生成\"披露豁免\"申请材料", "AI智能评估重大性阈值", "AI多语言合规包装"],
+    anti:["跨期信息对比分析", "公告与实际数据核验", "独立信息核实机制"],
+    fraudType:"disclosure", year:2012, severity:"一般",
+    fraudDesc:"珠海中富作为包装行业企业，在 2012 年重大资产收购过程中暴露出严重的信息披露违法违规行为。公司于 2012 年 12 月 10 日发布收购公告 时，为掩盖拟收购的 48 家子公司经营业绩下滑的事实，仅披露其 1-9 月净利润 8638.25 万元，而故意隐瞒其 1-10 月净利润已大幅下滑至 6671.47 万元的关键数据，构成误导性陈述。2012 年 12 月 25 日，公司发布公告及向监管",
+    aiDesc:"AI依托包装制造行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对珠海中富的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"珠海中富原财务造假手段来源于中国证监会行政处罚决定书，后续链接顺序按上述罗列内容依次对应(即第一至二条链接对应中国证监会行政处罚决定书)：1.https://www.csrc.gov.cn/csrc/c101928/c1042490/content.shtml2.https://www.csrc.gov.cn/csrc/c101928/c10429" },
+  { company:"西藏发展", industry:"食品/酒类", industryCode:"food",
+    fraud:["虚构采购协议虚增资产", "虚假记账掩盖借款与违规票据行为"],
+    ai:["AI批量生成虚假合同单据", "AI仿真收入数据规避检测", "多版本财务数据智能生成"],
+    anti:["交易模式异常检测", "资金流向穿透核查", "收入确认时点验证"],
+    fraudType:"revenue", year:2016, severity:"重大",
+    fraudDesc:"西藏发展作为以啤酒生产销售为主业的区域型企业，依托酒类行业供应链采购分散、资金往来频繁、异地业务核查难度大的经营特点，通过 虚构采购协议虚增资产、虚假记账掩盖借款与违规票据行为、跨期调节财务科目等方式实施系统性财务造假，造假贯穿多期财务报告，涉及资产、 负债、损益等多个核心科目；AI 则依托其原有造假路径，结合酒类制造行业的采购逻辑、资金流转规律与信息披露要求，对虚构交易、科目调节、 资金隐瞒等环",
+    aiDesc:"AI依托食品/酒类行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对西藏发展的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"西藏发展原财务造假手段来源中国证券监督管理委员会行政处罚决定书： https://www.csrc.gov.cn/csrc/c101928/c7524698/content.shtml" },
+  { company:"斯太尔", industry:"汽车零部件", industryCode:"auto",
+    fraud:["虚构技术许可收入", "虚增应收账款"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2017, severity:"重大",
+    fraudDesc:"斯太尔作为曾聚焦发动机研发制造的汽车零部件企业，依托汽车零部件行业 “技术许可业务核查难度大、关联交易隐蔽、资金往来复杂” 的经 营特点，通过虚构技术许可收入、虚增应收账款、隐瞒关联方资金占用等方式实施系统性财务造假，核心围绕利润操纵与资金占用两大违规维度， 形成 “虚假收入确认 + 关联方非关联化” 的典型制造企业造假模式；AI 则依托其原有造假路径，结合汽车零部件行业的业务逻辑、技术交易规 则",
+    aiDesc:"AI依托汽车零部件行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对斯太尔的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"斯太尔原财务造假手段来源新浪财经中国证监会行政处罚决定书(中兴财光华会计师事务所、杨海龙、王雅栋)： https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=000760&id=7650674" },
+  { company:"北大医药", industry:"医药/医疗", industryCode:"pharma",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI自动化关联资金清洗", "AI生成虚假担保证明材料", "AI隐匿表外负债路径"],
+    anti:["担保事项合规核验", "资金占用路径还原", "多层嵌套结构识别"],
+    fraudType:"fund", year:2014, severity:"一般",
+    fraudDesc:"北大医药股份有限公司作为医药行业企业，主营业务涵盖化学制剂、医药流通等领域，具有关联交易复杂、股权结构多元的行业特点。公司 在 2013 年至 2014 年间，因涉及股东间巨额股权代持协议未披露、相关方未及时履行告知义务，导致上市公司未能及时披露重大事项，构成信息 披露违法。此外，公司在 2019 年至 2021 年间为关联方 1 亿元借款提供担保，在担保对象贷款逾期、公司面临履行保证责任风险时，",
+    aiDesc:"AI依托医药/医疗行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对北大医药的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"北大医药原财务造假手段来源于中国证监会、重庆监管局官网：" },
+  { company:"中信国安", industry:"资源/信息", industryCode:"it",
+    fraud:["预售模式虚增收入", "少计财务费用"],
+    ai:["AI批量生成虚假合同单据", "AI仿真收入数据规避检测", "多版本财务数据智能生成"],
+    anti:["交易模式异常检测", "资金流向穿透核查", "收入确认时点验证"],
+    fraudType:"revenue", year:2017, severity:"重大",
+    fraudDesc:"中信国安信息产业股份有限公司作为盐湖资源开发与信息网络基础设施领域的综合性企业，主营业务涵盖钾锂等资源产品开发、有线电视网 络投资、增值电信服务等，具有资源依赖性强、子公司众多、业务多元化的行业特点。公司利用子公司青海中信国安作为造假主体，在 2009 年至 2014 年间通过预售模式虚增收入、少计财务费用，累计虚增利润超 10 亿元，并在 2015 年转让股权时继续虚增投资收益，形成长达七年的系",
+    aiDesc:"AI依托资源/信息行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对中信国安的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"中信国安原财务造假手段来源于中国证监会官网：https://www.csrc.gov.cn/csrc/c101928/c53e878eff3474d8c825eb68ec79621e8/content.shtml" },
+  { company:"高鸿股份", industry:"IT/贸易", industryCode:"it",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2019, severity:"重大",
+    fraudDesc:"高鸿股份作为主营 IT 销售、企业信息化和电信增值业务的上市公司，具有贸易业务规模大、子公司众多、业务链条长的行业特点。公司通过 “走单”虚假贸易，在 2015 年至 2023 年期间连续 9 年系统性虚增收入和利润，累计虚增营业收入 198.76 亿元，累 长期开展无商业实质的“空转” 计虚增利润总额 7622.59 万元，并将包含虚假数据的报表用于 2020 年非公开发行股票，构成欺诈发行。A",
+    aiDesc:"AI依托IT/贸易行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对高鸿股份的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"高鸿股份原财务造假手段来源于公司媒体网站公告、中国证监会新闻，后续链接顺序按上述罗列内容依次对应（即第一条链接对应公司媒体网站公告、第二条链接对应中国证监会新闻）                   ：1.   https://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail" },
+  { company:"欢瑞世纪", industry:"影视/文化", industryCode:"culture",
+    fraud:["虚构收回应收款项"],
+    ai:["AI模拟真实交易背景材料", "AI生成客户信用评估报告", "AI优化收入确认时间节点"],
+    anti:["行业收入基准对比模型", "多维数据交叉验证", "客户侧独立核实"],
+    fraudType:"revenue", year:2018, severity:"重大",
+    fraudDesc:"欢瑞世纪联合股份有限公司作为影视文化行业的上市公司，主营业务涵盖电视剧制作发行、艺人经纪等，具有项目周期长、收入确认复杂、 关联交易隐蔽的行业特点。公司利用影视行业收入确认依赖合同生效时点、母带交付时点等主观判断空间，在 2013 年至 2016 年期间通过提前确 认收入、虚构收回应收款项、推迟计提坏账准备、隐瞒关联方资金占用等手段系统性虚增利润，累计虚增金额近 1.5 亿元，导致重大资产重组文件",
+    aiDesc:"AI依托影视/文化行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对欢瑞世纪的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"欢瑞世纪原财务造假手段来源于中国证监会重庆监管局官网：https://www.csrc.gov.cn/chongqing/c104814/c1351888/content.shtml" },
+  { company:"佳电股份", industry:"电机制造", industryCode:"manufacture",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI批量生成虚假合同单据", "AI仿真收入数据规避检测", "多版本财务数据智能生成"],
+    anti:["交易模式异常检测", "资金流向穿透核查", "收入确认时点验证"],
+    fraudType:"revenue", year:2016, severity:"一般",
+    fraudDesc:"佳电股份作为电机行业龙头企业，为完成重组业绩承诺，在时任董事长兼总经理赵明决策、财务总监梁喜华实施下，通过“少结转成本、延 后入账费用、后期集中转回”等手段，在 2013 年和 2014 年虚增利润，2015 年再将前期利润一次性转回，形成系统性“业绩平滑”式财务造假。 AI 则可能利用电机行业成本核算复杂、信息系统可操控的特点，对该造假路径进行仿真升级；而 AI 反造假也针对性围绕成本结转逻辑校",
+    aiDesc:"AI依托电机制造行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对佳电股份的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"佳电股份原财务造假手段来源于中国证监会官网：https://www.csrc.gov.cn/csrc/c101928/c1043308/content.shtml" },
+  { company:"广济药业", industry:"医药/医疗", industryCode:"pharma",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2022, severity:"一般",
+    fraudDesc:"广济药业作为维生素 B2 细分行业的龙头生产企业，利用医药原料经销业务模式复杂、收入确认存在主观判断空间的行业特点，在 2022 年发 生重大会计差错。公司全资子公司济康医药在与部分客户开展经销业务时，其业务实质身份为代理人，应采用净额法确认收入，但公司错误地采 用总额法进行核算，导致 2022 年第一季度、半年度、第三季度报告分别多计营业收入 4560.16 万元、13686.00 万元、138",
+    aiDesc:"AI依托医药/医疗行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对广济药业的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"湖北广济药业原财务造假手段来源于湖北证监局行政处罚决定书、行政监管措施决定书等权威披露信息，后续链接顺序按上述罗列内容依次对应(即第一条链接对应湖北证监局行政处罚决定书，第二条对应行政监管措施决定书)：1.https://www.csrc.gov.cn/hubei/c104406/c7575448/content.shtml2.https://www" },
+  { company:"科苑集团", industry:"化工/生物", industryCode:"chemical",
+    fraud:["违规炒股", "资金占用", "虚构资产"],
+    ai:["AI自动化关联资金清洗", "AI生成虚假担保证明材料", "AI隐匿表外负债路径"],
+    anti:["担保事项合规核验", "资金占用路径还原", "多层嵌套结构识别"],
+    fraudType:"fund", year:2015, severity:"一般",
+    fraudDesc:"安徽省科苑集团股份有限公司作为以生物工程、精细化工为主业的科技创新型企业，具有“一股独大”股权结构集中、关联方交易隐蔽、募 投资金运作频繁的行业特点。公司自 2000 年上市起，两任大股东“接力”造假，通过违规炒股、资金占用、关联交易、虚构资产、隐瞒负债、违 规担保等手段系统性掏空上市公司，累计挪用募集资金近 3 亿元、未入账银行借款超 4 亿元、虚增在建工程上亿元，最终留下 5 亿多元债务“烂 ",
+    aiDesc:"AI依托化工/生物行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对科苑集团的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"科苑集团原财务造假手段来源于中国证监会行政处罚决定书、市场禁入决定书，后续链接顺序按上述罗列内容依次对应（即第一条链接对应中国证监会行政处罚决定书、第二条链接对应中国证监会市场禁入决定书）                                ：1.   https://www.csrc.gov.cn/csrc/c101928/c10433" },
+  { company:"鸿达兴业", industry:"化工/资源", industryCode:"chemical",
+    fraud:["虚增营收利润", "虚假披露募集资金归还情况", "隐瞒\n重大诉讼仲裁及担保事项等方式"],
+    ai:["AI批量生成虚假合同单据", "AI仿真收入数据规避检测", "多版本财务数据智能生成"],
+    anti:["交易模式异常检测", "资金流向穿透核查", "收入确认时点验证"],
+    fraudType:"revenue", year:2019, severity:"重大",
+    fraudDesc:"鸿达兴业作为国内大型化工资源产业集团，主营塑料化工、盐湖资源开发、商贸物流等业务，借化工行业生产流程复杂、原材料/产成品存 货品类多且估值难度大、募集资金使用监管环节多的行业特点，通过虚增营收利润、擅自改变募集资金用途、虚假披露募集资金归还情况、隐瞒 重大诉讼仲裁及担保事项等方式，形成贴合化工企业经营特征的系统性信息披露违法及财务造假；AI 则依托鸿达兴业原有造假路径，结合化工行 业的业务逻辑、资",
+    aiDesc:"AI依托化工/资源行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对鸿达兴业的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"鸿达兴业原财务造假手段来源于中国证券监督管理委员会江苏监管局行政处罚决定书、新华网官方案情披露等权威信息，后续链接顺序按上述罗列内容依次对应（即第一条链接对应江苏监管局行政处罚决定书，第二条对应新华网案情披露）                                           ： 1. https://www.csrc.gov.cn" },
+  { company:"同洲电子", industry:"数字视讯", industryCode:"it",
+    fraud:["虚构销售收入等手段系统性调节利润"],
+    ai:["AI生成虚假重大事项说明", "AI优化信息披露完整性", "AI模拟合规自查报告"],
+    anti:["重大性阈值合规检测", "监管报告真实性核查", "信息完整性量化评估"],
+    fraudType:"disclosure", year:2018, severity:"一般",
+    fraudDesc:"同洲电子股份有限公司作为数字视讯行业的首批上市公司，主营业务涵盖机顶盒、智慧家庭产品的研发生产与销售，具有行业竞争激烈、转 型压力大、业绩波动明显的行业特点。公司为避免连续三年亏损导致暂停上市，在 2014 年至 2016 年期间通过提前确认职工薪酬负债、滞后确认 资产减值损失、虚构销售收入等手段系统性调节利润，累计虚增 2015 年净利润 1.10 亿元（将亏损披露为盈利） ，虚减 2014 年",
+    aiDesc:"AI依托数字视讯行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对同洲电子的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"同洲电子原财务造假手段来源于中国证监会官网：http://www.csrc.gov.cn/shenzhen/c104320/c1591547/content.shtml" },
+  { company:"獐子岛", industry:"农业/水产", industryCode:"agri",
+    fraud:["少结转成本虚增利润"],
+    ai:["AI构建虚假评估证据链", "AI批量生成资产估值报告", "AI模拟可比公司市场数据"],
+    anti:["生物资产卫星遥感核查", "实地盘点与账面对比", "减值敏感性分析"],
+    fraudType:"asset", year:2019, severity:"重大",
+    fraudDesc:"獐子岛集团股份有限公司作为海洋水产养殖行业的龙头企业，主营业务涵盖虾夷扇贝、海参、鲍鱼等海产品的底播养殖与销售，具有生物资 产盘点难、海域作业轨迹核实难、生产成本与采捕面积直接挂钩的行业特点。公司为应对 2014 年、2015 年连续两年亏损的压力，利用海底库存及 采捕情况难发现、难调查、难核实的特点，在 2016 年通过调减虾夷扇贝采捕面积、少结转成本虚增利润，2017 年通过虚假核销、减值将前",
+    aiDesc:"AI依托农业/水产行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对獐子岛的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"獐子岛原财务造假手段来源于中国证监会行政处罚决定书、市场禁入决定书，后续链接顺序按上述罗列内容依次对应（即第一条链接对应中国证监会行政处罚决定书、第二条链接对应中国证监会市场禁入决定书）                               ：1.   http://www.csrc.gov.cn/csrc/c101928/c1042334/" },
+  { company:"凯瑞德", industry:"纺织/贸易", industryCode:"manufacture",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI设计多层资金流转路径", "AI批量生成资金往来单据", "AI拆分隐匿关联交易"],
+    anti:["关联方资金图谱分析", "区块链资金溯源存证", "资金闭环路径识别"],
+    fraudType:"fund", year:2020, severity:"一般",
+    fraudDesc:"凯瑞德作为纺织行业转型煤炭贸易的上市公司，其财务造假核心在于长期隐瞒巨额表外负债。公司利用内部控制失效、印章管理混乱的特点， 在长达 7 年时间内，通过实际控制人绕过公司治理擅自对外提供巨额担保（4.66 亿元），并隐瞒 55 笔重大诉讼仲裁（9.54 亿元），导致定期报 告存在重大遗漏，使超过 14 亿元的风险敞口完全被财报掩盖。AI 则依托其原有造假路径，结合煤炭贸易行业资金往来密集、关联方复",
+    aiDesc:"AI依托纺织/贸易行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对凯瑞德的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"凯瑞德原财务造假手段来源于中国证监会行政处罚决定书、市场禁入决定书等权威披露信息，后续链接顺序按上述罗列内容依次对应(即第一至五条链接对应中国证监会行政处罚决定书，第六条对应市场禁入决定书)：1.https://www.csrc.gov.cn/csrc/c101928/c1042337/content.shtml2.https://www.csrc." },
+  { company:"东方海洋", industry:"农业/渔业", industryCode:"agri",
+    fraud:["票据贴现等方式掩盖资金占用", "生物资产存货操纵"],
+    ai:["AI构建关联方隐匿网络", "AI模拟正常贸易资金流水", "AI智能设计资金回路"],
+    anti:["银行接口穿透确认", "表外负债全量扫描", "关联交易真实性核查"],
+    fraudType:"fund", year:2020, severity:"重大",
+    fraudDesc:"东方海洋作为海洋渔业跨界大健康的双主业上市公司，利用农业生物资产盘点难、大健康业务资金往来复杂的特点，长期隐瞒控股股东非经 营性资金占用与违规担保。2016 年至 2020 年期间，公司通过关联方及第三方账户向控股股东累计转出资金数十亿元，并违规提供担保超 11 亿元， 同时通过未入账融资租赁、票据贴现等方式掩盖资金占用，导致定期报告存在重大遗漏，累计超 20 亿元风险敞口被掩盖。AI 依托其原有",
+    aiDesc:"AI依托农业/渔业行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对东方海洋的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"东方海洋原财务造假手段来源于山东证监局行政处罚决定书、市场禁入决定书、行政监管措施决定书等权威披露信息，后续链接顺序按上述罗列内容依次对应(即第一至二条链接对应山东证监局行政处罚决定书，第三条对应市场禁入决定书，第四条对应行政监管措施决定书)：1.https://www.csrc.gov.cn/shandong/c104216/c1777677/con" },
+  { company:"中泰化学", industry:"化工", industryCode:"chemical",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI模拟真实交易背景材料", "AI生成客户信用评估报告", "AI优化收入确认时间节点"],
+    anti:["行业收入基准对比模型", "多维数据交叉验证", "客户侧独立核实"],
+    fraudType:"revenue", year:2022, severity:"重大",
+    fraudDesc:"中泰化学作为新疆地区大型氯碱化工企业，利用供应链贸易业务复杂、关联方资金往来密集的行业特点，通过将不具有控制权的代理贸易业 务按照总额法核算，在 2020 年至 2022 年累计虚增收入超 70 亿元、虚增成本超 70 亿元，其中 2022 年单年虚增收入 42.48 亿元。同时，公司长期 隐瞒控股股东及其关联方非经营性资金占用，2021 年至 2023 年累计发生额达 84.16 亿元，通过预付",
+    aiDesc:"AI依托化工行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对中泰化学的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"中泰化学原财务造假手段来源于新疆证监局行政处罚决定书、行政监管措施决定书等权威披露信息，后续链接顺序按上述罗列内容依次对应(即第一至六条链接对应新疆证监局行政处罚决定书，第七条对应行政监管措施决定书)：1.https://www.csrc.gov.cn/xinjiang/c104368/c7481884/content.shtml2.https:/" },
+  { company:"冠福股份", industry:"陶瓷/医药", industryCode:"pharma",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI设计多层资金流转路径", "AI批量生成资金往来单据", "AI拆分隐匿关联交易"],
+    anti:["关联方资金图谱分析", "区块链资金溯源存证", "资金闭环路径识别"],
+    fraudType:"fund", year:2018, severity:"重大",
+    fraudDesc:"冠福股份作为由传统陶瓷转型医药中间体、电商等多元业务的上市公司，利用多主业并行、资金往来复杂的特性，在 2017 年至 2018 年期间 长期隐瞒巨额表外负债。公司原控股股东林氏家族在未履行内部审批程序的情况下，以公司及子公司名义违规对外借款、共同借款、开具商业承 兑汇票、对外担保，导致 2017 年半年报至 2018 年半年报期间的五期定期报告中，累计未披露负债及资产金额达 52.14 亿元，未",
+    aiDesc:"AI依托陶瓷/医药行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对冠福股份的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"ST 冠福原财务造假手段来源于中国证监会行政处罚决定书、行政复议决定书等权威披露信息，后续链接顺序按上述罗列内容依次对应(即第一条链接对应中国证监会行政处罚决定书，第二至三条对应市场禁入决定书)：：1.https://www.csrc.gov.cn/csrc/c101928/c1043039/content.shtml2.https://www.cs" },
+  { company:"中核钛白", industry:"化工/新材料", industryCode:"chemical",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI生成虚假重大事项说明", "AI优化信息披露完整性", "AI模拟合规自查报告"],
+    anti:["重大性阈值合规检测", "监管报告真实性核查", "信息完整性量化评估"],
+    fraudType:"disclosure", year:2023, severity:"重大",
+    fraudDesc:"中核钛白作为钛白粉行业龙头企业，利用金融衍生品的复杂性和定增融券业务的信息不对称，在 2023 年非公开发行股票过程中，实控人联合 两家头部券商及私募基金，通过员工持股计划出借券源、场外衍生品交易等多层嵌套的金融安排，实质参与非公开发行并以市价融券卖出，提前 锁定与非公开发行股票折扣价之间的价差收益，变相规避了法定的 6 个月限售期规定，累计套利超 6000 万元。同时，实控人隐瞒其通过一系列交 ",
+    aiDesc:"AI依托化工/新材料行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对中核钛白的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"中核钛白原财务造假手段来源于中国证监会行政处罚决定书、市场禁入决定书等权威披露信息，后续链接顺序按上述罗列内容依次对应(即第一至二条链接对应中国证监会行政处罚决定书，第三条对应市场禁入决定书)：1.https://www.csrc.gov.cn/csrc/c101928/c1043368/content.shtml2.https://www.csrc" },
+  { company:"东方锆业", industry:"化工/新材料", industryCode:"chemical",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI生成\"披露豁免\"申请材料", "AI智能评估重大性阈值", "AI多语言合规包装"],
+    anti:["跨期信息对比分析", "公告与实际数据核验", "独立信息核实机制"],
+    fraudType:"disclosure", year:2014, severity:"一般",
+    fraudDesc:"东方锆业作为锆制品行业龙头企业，多次因信息披露违规问题受到证监会及交易所处罚。2012 年至 2014 年期间，公司在年产 2 万吨高纯氯氧 化锆项目建设过程中，时任董事长在未经董事会及股东大会批准的情况下，擅自改变非公开发行募集资金 7990 万元用途，用于老项目的拆迁改造， 且未在 2012 年至 2014 年年度报告及各次募集资金使用公告中披露，构成信息披露违法。此外，公司 2012 年业绩",
+    aiDesc:"AI依托化工/新材料行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对东方锆业的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"东方锆业原财务造假手段来源于中国证监会行政处罚决定书：https://www.csrc.gov.cn/csrc/c101928/c1042879/content.shtml" },
+  { company:"创新医疗", industry:"医疗服务", industryCode:"pharma",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI批量生成虚假合同单据", "AI仿真收入数据规避检测", "多版本财务数据智能生成"],
+    anti:["交易模式异常检测", "资金流向穿透核查", "收入确认时点验证"],
+    fraudType:"revenue", year:2018, severity:"一般",
+    fraudDesc:"创新医疗作为医疗服务行业上市公司，在收购建华医院等医疗机构后，因并购整合不力导致子公司失控，暴露出严重的财务与内控问题。2016 年至 2018 年，全资子公司建华医院在体检、治疗、设备销售等业务中存在收入、成本确认不规范的问题，同时公章使用、医疗设备融资租赁及存 货管理等方面存在重大内部控制缺陷，导致公司信息披露不准确，被浙江证监局出具警示函。此外，原副总裁兼建华医院院长梁喜才等人通过虚 假开票",
+    aiDesc:"AI依托医疗服务行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对创新医疗的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"创新医疗原财务造假手段来源于浙江证监局行政监管措施决定书，后续链接顺序按上述罗列内容依次对应(即第一至三条链接对应浙江证监局行政监管措施决定书)：1.https://www.csrc.gov.cn/zhejiang/c103940/c1576448/content.shtml2.https://www.csrc.gov.cn/zhejiang/c1" },
+  { company:"广日传媒", industry:"传媒/广告", industryCode:"culture",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2015, severity:"重大",
+    fraudDesc:"广东广州日报传媒作为传统媒体转型的综合集团，在 2013 年跨界收购户外广告公司香榭丽的过程中，因标的公司系统性财务造假而引发重大 信息披露违法。2011 年至 2015 年，香榭丽通过制作虚假合同虚增收入共计 5.99 亿元，虚增净利润共计 5.61 亿元，其中 2011 年至 2013 年收购前 的实际净利润均为巨额亏损（累计-1.86 亿元），但披露数据却为盈利 1.20 亿元。同时，香榭丽",
+    aiDesc:"AI依托传媒/广告行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对广日传媒的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"广东广州日报传媒原财务造假手段来源于中国证监会行政处罚决定书、市场禁入决定书等权威披露信息，后续链接顺序按上述罗列内容依次对应(即第一至五条链接对应中国证监会行政处罚决定书，第六条对应市场禁入决定书)：1.https://www.csrc.gov.cn/csrc/c101928/c6209e42fe1944dd887110586cc0a7481/con" },
+  { company:"武汉凡谷", industry:"通信设备", industryCode:"it",
+    fraud:["少计自制半成品领用\n的方式虚增利润"],
+    ai:["AI模拟真实交易背景材料", "AI生成客户信用评估报告", "AI优化收入确认时间节点"],
+    anti:["行业收入基准对比模型", "多维数据交叉验证", "客户侧独立核实"],
+    fraudType:"revenue", year:2016, severity:"一般",
+    fraudDesc:"武汉凡谷作为移动通信天馈系统射频器件制造商，利用制造业成本核算复杂、ERP 系统缺失的行业特点，在 2016 年通过少计自制半成品领用 的方式虚增利润。2016 年半年报虚增营业利润 1559.59 万元（占当期披露利润 51.17%），虚增存货 1559.59 万元；三季报虚增营业利润 3810.65 万元（占 115.09%），虚增存货 5370.23 万元。上述虚增成本在第四季度一次性结转，",
+    aiDesc:"AI依托通信设备行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对武汉凡谷的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"武汉凡谷原财务造假手段来源于湖北证监局行政处罚决定书、行政监管措施决定书等权威披露信息，后续链接顺序按上述罗列内容依次对应(即第一条链接对应湖北证监局行政处罚决定书，第二至三条对应行政监管措施决定书)：1.https://www.csrc.gov.cn/hubei/c104396/c1351598/content.shtml2.https://www" },
+  { company:"绿大地", industry:"农业/苗木", industryCode:"agri",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI批量生成虚假合同单据", "AI仿真收入数据规避检测", "多版本财务数据智能生成"],
+    anti:["交易模式异常检测", "资金流向穿透核查", "收入确认时点验证"],
+    fraudType:"revenue", year:2010, severity:"特大",
+    fraudDesc:"绿大地作为早期农业上市公司的财务造假典型，利用苗木行业存货盘点难、生物资产价值评估弹性大、交易对手方分散且多为个体农户的特 点，通过注册由公司实际控制的关联公司网络，采用伪造合同、阴阳发票、虚假银行票证等手段，系统性虚增资产与收入以实现欺诈发行上市。 其造假核心在于构建一个由自己控制的\"虚假交易闭环\"，利用资金自循环将虚增利润转化为虚增资产（如土地使用权、苗木存货），形成贴合农 业企业经营特征的系",
+    aiDesc:"AI依托农业/苗木行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对绿大地的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"绿大地原财务造假手段来源于中国证监会行政处罚决定书、市场禁入决定书等权威披露信息，后续链接顺序按上述罗列内容依次对应(即第一至四条链接对应中国证监会行政处罚决定书，第五至七条对应市场禁入决定书)：1.https://www.csrc.gov.cn/csrc/c101928/c1043145/content.shtml2.https://www.cs" },
+  { company:"飞马国际", industry:"供应链/贸易", industryCode:"manufacture",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2018, severity:"重大",
+    fraudDesc:"飞马国际作为供应链管理服务行业上市公司，利用贸易执行业务资金流水大、结算周期长、商业实质判断难的行业特点，在多个时期存在严 重的财务造假与信息披露违规行为。公司贸易执行业务实质上为不承担存货风险的代销业务，却按总额法确认收入，导致收入规模虚高；2018 年， 公司存在 24 亿元违规担保及 13.75 亿元关联方资金占用，均未履行审议程序及披露义务；截至 2018 年末，预付账款、应收账款和其他应",
+    aiDesc:"AI依托供应链/贸易行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对飞马国际的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"飞马国际供应链原财务造假手段来源于深圳证监局行政处罚决定书、行政监管措施决定书等权威披露信息，后续链接顺序按上述罗列内容依次对应(即第一条链接对应深圳证监局行政处罚决定书，第四条对应行政监管措施决定书)：1.https://www.csrc.gov.cn/shenzhen/c104320/c1591571/content.shtml2.https:/" },
+  { company:"天宝食品", industry:"食品/农业", industryCode:"food",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI自动化关联资金清洗", "AI生成虚假担保证明材料", "AI隐匿表外负债路径"],
+    anti:["担保事项合规核验", "资金占用路径还原", "多层嵌套结构识别"],
+    fraudType:"fund", year:2018, severity:"一般",
+    fraudDesc:"天宝食品作为以水产品加工出口为主的农业企业，利用食品行业资金往来复杂、内控执行松散的特点，在 2016 年至 2018 年期间长期隐瞒巨 额表外负债。公司实际控制人黄作庆在未履行审议程序及印章使用流程的情况下，私自使用公章为本人及控股股东的民间借贷提供违规担保，涉 及金额 4.5 亿元（占 2015 年经审计净资产 22.97%），导致 2016 年、2017 年年报存在重大遗漏。同时，公司 23",
+    aiDesc:"AI依托食品/农业行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对天宝食品的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"天宝食品原财务造假手段来源于大连证监局行政处罚决定书，后续链接顺序按上述罗列内容依次对应(即第一至二条链接对应大连证监局行政处罚决定书)：1.https://www.csrc.gov.cn/dalian/c104244/c7195175/content.shtml2.https://www.csrc.gov.cn/dalian/c104244/c13" },
+  { company:"鱼跃医疗", industry:"医疗器械", industryCode:"pharma",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI合规包装延迟披露方案", "AI生成多版本财务数据", "AI计算披露豁免阈值"],
+    anti:["披露及时性监测系统", "NLP信息完整性验证", "多版本文件一致性分析"],
+    fraudType:"disclosure", year:2008, severity:"一般",
+    fraudDesc:"鱼跃医疗作为国内医疗器械行业龙头，在 IPO 阶段及上市后多次陷入信息披露违规与财务疑云。2008 年上市前后，公司被质疑制氧机出口数 据存在“28000 台”与“37 台”的巨大差异、2005-2006 年涉嫌偷逃税款（2007 年补缴税款为往年 10 倍），并通过一笔向美国 APM 公司出售资产 的非经常性交易（收益占当年净利润 59.78%）粉饰业绩。2018 年，公司实际控制人因内幕交易、",
+    aiDesc:"AI依托医疗器械行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对鱼跃医疗的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"鱼跃医疗设备原财务造假手段来源于中国证监会行政处罚决定书、市场禁入决定书等权威披露信息，后续链接顺序按上述罗列内容依次对应(即" },
+  { company:"奥维通信", industry:"通信设备", industryCode:"it",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI构建关联方隐匿网络", "AI模拟正常贸易资金流水", "AI智能设计资金回路"],
+    anti:["银行接口穿透确认", "表外负债全量扫描", "关联交易真实性核查"],
+    fraudType:"fund", year:2024, severity:"重大",
+    fraudDesc:"奥维通信作为通信设备制造企业，近年来因严重的财务信息披露违规及大股东资金占用问题被监管严厉处罚。2025 年 1 月披露的 2024 年度业 绩预告预计营收 4.5-5.2 亿元、亏损 3200-4500 万元，但 4 月修正为营收 2.8-2.99 亿元、亏损 5000-7500 万元，修正前后营收差异高达 40%以上， 且未在规定期限内提示股票可能被实施退市风险警示。同时，公司因会计差错更正追",
+    aiDesc:"AI依托通信设备行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对奥维通信的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"奥维通信原财务造假手段来源于辽宁证监局行政监管措施决定书，后续链接顺序按上述罗列内容依次对应(即第一至二条链接对应行政监管措施决定书)：1.https://www.csrc.gov.cn/liaoning/c103750/c7565698/content.shtml2.https://www.csrc.gov.cn/liaoning/c103750/" },
+  { company:"安妮股份", industry:"传媒/电商", industryCode:"culture",
+    fraud:["虚增\n营业收入", "营业成本的方式虚增利润", "虚构交易确认 7 名客户销售收\n入"],
+    ai:["AI模拟真实交易背景材料", "AI生成客户信用评估报告", "AI优化收入确认时间节点"],
+    anti:["行业收入基准对比模型", "多维数据交叉验证", "客户侧独立核实"],
+    fraudType:"revenue", year:2015, severity:"一般",
+    fraudDesc:"安妮股份作为从传统造纸转型互联网的综合集团，在两次并购中均暴露出严重的财务造假与信息披露违规。2008 年上市当年，公司通过虚增 营业收入、营业成本的方式虚增利润，导致年报存在虚假记载。2015 年收购移动互联网营销公司后，标的公司通过虚构交易确认 7 名客户销售收 入，导致合并报表虚增利润。此外，公司多次出现业绩预告严重失准（2017 年净利润从预告盈利修正为巨亏 3.65 亿元）、商誉减值计提",
+    aiDesc:"AI依托传媒/电商行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对安妮股份的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"安妮股份原财务造假手段来源于中国证监会行政处罚决定书,后续链接顺序按上述罗列内容依次对应(即第一至五二链接对应中国证监会行政处罚决定书)：" },
+  { company:"歌尔股份", industry:"智能硬件", industryCode:"it",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI合规包装延迟披露方案", "AI生成多版本财务数据", "AI计算披露豁免阈值"],
+    anti:["披露及时性监测系统", "NLP信息完整性验证", "多版本文件一致性分析"],
+    fraudType:"disclosure", year:2016, severity:"一般",
+    fraudDesc:"歌尔股份作为声学器件及智能硬件制造龙头，在内幕信息管理及分拆上市过程中暴露出信息披露违规与独立性争议。2016 年，公司因内幕信 息知情人登记管理严重不规范被山东证监局责令改正，涉及定期报告、利润分配、员工持股计划等重大事项未按规定登记相关人员，内幕信息知 情人名单明显不符合决策流程所涉及的岗位和人员情况。2022 年，公司分拆歌尔微申报创业板上市，被质疑钻监管漏洞实现原主营业务“重复上 市”，且",
+    aiDesc:"AI依托智能硬件行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对歌尔股份的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"歌尔股份原财务造假手段来源于山东证监局行政监管措施决定书:https://www.csrc.gov.cn/shandong/c104206/c1080048/content.shtml" },
+  { company:"兆新股份", industry:"新能源/化工", industryCode:"chemical",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI构建关联方隐匿网络", "AI模拟正常贸易资金流水", "AI智能设计资金回路"],
+    anti:["银行接口穿透确认", "表外负债全量扫描", "关联交易真实性核查"],
+    fraudType:"fund", year:2020, severity:"一般",
+    fraudDesc:"兆新股份作为新能源与精细化工双主业企业，依托光伏电站投资建设周期长、资产处置流程复杂、关联方资金往来频繁的行业与经营特点，存 在未按规定披露关联方资金占用、资产处置事项信息披露不准确、财务核算不规范等贴合双主业企业资本运作特征的信息披露类财务违规；AI 则依 托其原有违规路径，结合新能源行业资金密集、资产处置流程繁琐的规律，对关联交易隐瞒、信息披露操纵、会计核算调节等环节进行仿真升级， 让违规行为",
+    aiDesc:"AI依托新能源/化工行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对兆新股份的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"兆新股份原财务造假手段来源深圳证监局关于对深圳市兆新能源股份有限公司采取责令改正措施的决定：https://www.csrc.gov.cn/shenzhen/c104320/c1582345/content.shtml" },
+  { company:"德奥通航", industry:"通用航空", industryCode:"transport",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI自动化关联资金清洗", "AI生成虚假担保证明材料", "AI隐匿表外负债路径"],
+    anti:["担保事项合规核验", "资金占用路径还原", "多层嵌套结构识别"],
+    fraudType:"fund", year:2019, severity:"一般",
+    fraudDesc:"德奥通航作为通用航空与家电制造双主业企业，依托通航行业资金密集、担保业务流程复杂、关联方往来隐蔽的行业与经营特点，存在巨额 违规担保未按规定披露、关联方资金占用隐瞒、财务核算不规范等贴合双主业企业资本运作特征的信息披露类财务违规，最终因重大违法违规被 强制退市；AI 则依托其原有违规路径，结合通航行业担保业务特性、资金管理规律，对违规担保隐瞒、资金占用拆分、信息披露操纵等环节进行 仿真升级，让违规",
+    aiDesc:"AI依托通用航空行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对德奥通航的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"德奥通航原财务造假手段来源中国证券监督管理委员会广东监管局： http://www.csrc.gov.cn/guangdong/c104558/c5927265/5927265/files" },
+  { company:"美邦服饰", industry:"服装零售", industryCode:"retail",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI生成减值测试参数底稿", "AI模拟行业景气基准数据", "AI自动优化临界值参数"],
+    anti:["行业减值参数基准对比", "全量复算审计模型", "资产组划分逻辑追踪"],
+    fraudType:"asset", year:2019, severity:"一般",
+    fraudDesc:"美邦服饰作为服装零售行业龙头企业，依托零售行业门店资产核算复杂、业绩波动受市场影响大的经营特点，存在投资性房地产确认不准确、 业绩预告披露不准确两大核心财务违规，叠加资产减值计提与费用调整不及时，导致财务报表信息披露失真，形成贴合服装零售企业资产运营与 业绩披露特征的信息披露类违规；AI 则依托其原有违规路径，结合服装零售行业门店资产管理、业绩预测的行业规律，对资产核算分类、业绩预 告调节、减值计",
+    aiDesc:"AI依托服装零售行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对美邦服饰的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"美邦服饰原财务违规手段来源中国证券监督管理委员会上海监管局：https://data.eastmoney.com/notices/detail/002269/AN202412241641418951.html" },
+  { company:"华明装备", industry:"电力装备", industryCode:"manufacture",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI生成虚假重大事项说明", "AI优化信息披露完整性", "AI模拟合规自查报告"],
+    anti:["重大性阈值合规检测", "监管报告真实性核查", "信息完整性量化评估"],
+    fraudType:"disclosure", year:2017, severity:"一般",
+    fraudDesc:"华明装备作为电力装备制造行业企业，依托装备制造行业股东结构复杂、资本运作频繁的经营特点，存在持股 5% 以上一致行动股东权益变 动未及时披露、持股比例降至 5% 时未停止股票交易的核心信息披露违规，利用一致行动关系的隐蔽性造成市场信息不对称，形成贴合电力装备 企业股东权益变动环节的典型违规特征；AI 则依托其原有违规路径，结合电力装备行业股东减持、权益变动的信息披露规律，对减持节奏控制、 一致行动",
+    aiDesc:"AI依托电力装备行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对华明装备的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"华明装备原财务违规手段来源中国证券监督管理委员会山东监管局： https://www.csrc.gov.cn/shandong/c104206/c1079955/content.shtml" },
+  { company:"东方雨虹", industry:"防水建材", industryCode:"material",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI模拟真实交易背景材料", "AI生成客户信用评估报告", "AI优化收入确认时间节点"],
+    anti:["行业收入基准对比模型", "多维数据交叉验证", "客户侧独立核实"],
+    fraudType:"revenue", year:2022, severity:"一般",
+    fraudDesc:"东方雨虹作为防水建材行业龙头企业，依托建材行业工程项目结算复杂、业务多元化（防水 + 光伏）、资金往来密集的经营特点，存在多维 度财务核算不规范问题，涉及收入确认、费用核算、债务重组、应收账款处理等核心环节，导致财务报表信息披露不准确，形成贴合建材企业业 务特性的财务核算类违规；AI 则依托其原有违规路径，结合建材行业多业务线核算规律、工程项目管理特点，对核算口径操纵、确认时点调节、 科目处理伪装",
+    aiDesc:"AI依托防水建材行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对东方雨虹的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"东方雨虹原财务违规手段来源深圳证券交易所的监管函： https://data.eastmoney.com/notices/detail/002271/AN202508111725512894.html" },
+  { company:"川润股份", industry:"机械制造", industryCode:"manufacture",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI设计多层资金流转路径", "AI批量生成资金往来单据", "AI拆分隐匿关联交易"],
+    anti:["关联方资金图谱分析", "区块链资金溯源存证", "资金闭环路径识别"],
+    fraudType:"fund", year:2019, severity:"一般",
+    fraudDesc:"川润股份作为流体机械与润滑设备制造企业，依托机械制造行业关联交易频繁、应收账款周转周期长、存货品类复杂的经营特点，存在关联 方资金占用未及时披露、应收账款坏账计提不充分、存货核算不规范等贴合制造企业资金管理与资产运营特征的财务违规；AI 则依托其原有违规 路径，结合机械制造行业业务逻辑、资金往来规律与资产特性，对关联交易隐瞒、坏账计提操纵、存货核算调节等环节进行仿真升级，让违规行 为更贴合企业经营",
+    aiDesc:"AI依托机械制造行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对川润股份的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"川润股份原财务违规手段来源深西藏证监局 函（第一则）以及中国证券监督管理委员会四川监管局行政处罚决定书（第二则）：1.https://static.cninfo.com.cn/finalpage/2023-07-21/1217346372.PDF2.https://www.csrc.gov.cn/sichuan/c104890/c1352008/co" },
+  { company:"联络互动", industry:"跨境电商/IT", industryCode:"it",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI生成虚假重大事项说明", "AI优化信息披露完整性", "AI模拟合规自查报告"],
+    anti:["重大性阈值合规检测", "监管报告真实性核查", "信息完整性量化评估"],
+    fraudType:"disclosure", year:2020, severity:"一般",
+    fraudDesc:"联络互动作为跨境电商与信息科技双主业企业，依托跨境业务信息披露链条长、股东权益变动频繁的行业与经营特点，存在股东大额股份被 冻结未及时披露、定期报告虚假记载的核心信息披露违规，利用跨境业务分散性与股权事务复杂性的特性，导致市场信息不对称；AI 则依托其原 有违规路径，结合科技与跨境电商行业的信息披露规律、股权管理特点，对股份冻结隐瞒、信息披露操纵等环节进行仿真升级，让违规行为更贴 合企业资本运作与",
+    aiDesc:"AI依托跨境电商/IT行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对联络互动的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"联络互动原财务造假手段来源中国证券监督管理委员会浙江监管局（第一则）以及新浪财经关于最近五年被证券监管部门和交易所处罚或采取监管措施情况的公告（第二则）： 1. https://www.csrc.gov.cn/hainan/c104738/c1422024/content.shtml 2. https://static.cninfo.com.cn" },
+  { company:"亚太股份", industry:"汽车零部件", industryCode:"auto",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI模拟真实交易背景材料", "AI生成客户信用评估报告", "AI优化收入确认时间节点"],
+    anti:["行业收入基准对比模型", "多维数据交叉验证", "客户侧独立核实"],
+    fraudType:"revenue", year:2019, severity:"重大",
+    fraudDesc:"亚太股份作为汽车制动系统核心零部件制造企业，依托汽车零部件行业供应链复杂、客户与供应商分散、应收账款周转周期长的经营特点， 存在通过子公司虚构购销业务虚增营收与利润、应收账款坏账计提不充分、未充分关注供应商资质导致交易真实性存疑等贴合制造企业供应链管 理特征的系统性财务造假；AI 则依托其原有造假路径，结合汽车零部件行业的业务逻辑、供应链规律与资金往来特性，对虚构交易链条、坏账计 提操纵、供应商资",
+    aiDesc:"AI依托汽车零部件行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对亚太股份的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"亚太股份原财务造假手段来源中国证券监督管理委员会浙江监管局 ：https://www.csrc.gov.cn/zhejiang/c103940/c1d35c7df8e184d05bde83fd7a7492bf1/content.shtml" },
+  { company:"奇正藏药", industry:"医药/藏药", industryCode:"pharma",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI设计多层资金流转路径", "AI批量生成资金往来单据", "AI拆分隐匿关联交易"],
+    anti:["关联方资金图谱分析", "区块链资金溯源存证", "资金闭环路径识别"],
+    fraudType:"fund", year:2019, severity:"一般",
+    fraudDesc:"奇正藏药作为藏药行业龙头企业，依托藏药企业资金配置中大额存单交易频繁、关联方往来紧密的行业特点，通过与控股股东开展累计 1.51 亿 元大额存单关联交易，未按规定履行董事会审议程序，也未在 2022 年年报、2023 年半年报及临时报告中披露，违反信息披露相关规定，同时审 计机构未识别该关联交易导致财报披露不准确，形成贴合藏药企业资本运作特征的信息披露类财务违规；AI 则依托奇正藏药原有违规路径，",
+    aiDesc:"AI依托医药/藏药行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对奇正藏药的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"奇正藏药原财务造假手段来源西藏证监局 ： https://www.csrc.gov.cn/tibet/c104712/c7441104/content.shtml" },
+  { company:"星期六", industry:"服装/电商", industryCode:"retail",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI仿造存货技术状态文档", "AI生成项目延期证明材料", "AI智能调控折现率取值"],
+    anti:["存货物理状态独立核查", "折现率合理性校验", "同行业估值交叉验证"],
+    fraudType:"asset", year:2020, severity:"一般",
+    fraudDesc:"星期六股份有限公司作为 “时尚消费 + 社交电商” 双主业转型企业，核心业务覆盖女鞋品牌运营、直播电商与互联网营销服务，依托消费行 业 “存货周转敏感、并购重组频繁、业绩承诺压力大” 的经营特点，存在业绩预告与快报未及时修正、存货跌价计提异常、并购标的业绩变脸等信 息披露与财务核算违规隐患，被深交所下发问询函质疑虚增收入、不当调节利润；AI 则依托其原有违规路径，结合消费行业存货管理特性、电商 业",
+    aiDesc:"AI依托服装/电商行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对星期六的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"星期六原财务造假手段来源关于东方财富证券对星期六股份有限公司及相关当事人给予公开谴责处分的公告（第一则）以及中国经济网转型后现最大亏损！多项财务数据存疑，星期六遭问：是否虚增收入？（第二则）：1. https://data.eastmoney.com/notices/detail/002291/AN201809271203068964.html2" },
+  { company:"罗莱生活", industry:"家居/纺织", industryCode:"manufacture",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI生成\"披露豁免\"申请材料", "AI智能评估重大性阈值", "AI多语言合规包装"],
+    anti:["跨期信息对比分析", "公告与实际数据核验", "独立信息核实机制"],
+    fraudType:"disclosure", year:2022, severity:"一般",
+    fraudDesc:"经核查证监会、深交所等监管机构官方披露信息及公司公告，罗莱生活（002293）截至 2026 年 3 月无公开认定的财务造假记录，但存在信 息披露不真实、重大事件未及时披露等违规行为。公司作为家纺行业龙头企业，主营业务聚焦家用纺织品研发、生产与销售，依托家纺行业 “加 盟渠道占比高、存货（家纺产品）周转敏感、线上线下销售融合” 的经营特点，其财务核算与信息披露需贴合行业 “存货跌价风险高、渠道资 ",
+    aiDesc:"AI依托家居/纺织行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对罗莱生活的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"原财务造假手段来源于江苏证监局关于对罗莱生活科技股份有限公司、薛霞采取出具警示函措施的决定： https://www.csrc.gov.cn/jiangsu/c103893/c7466161/content.shtml" },
+  { company:"雅百特", industry:"建筑装饰", industryCode:"material",
+    fraud:["虚构海外工程项目", "伪造\n\n全链条交易单据虚增营收"],
+    ai:["AI批量生成虚假合同单据", "AI仿真收入数据规避检测", "多版本财务数据智能生成"],
+    anti:["交易模式异常检测", "资金流向穿透核查", "收入确认时点验证"],
+    fraudType:"revenue", year:2016, severity:"特大",
+    fraudDesc:"雅百特作为建筑装饰与金属屋面系统企业，依托跨境工程业务核查难度大、海外项目信息不透明的行业特点，通过虚构海外工程项目、伪造 全链条交易单据虚增营收，同时伪造跨境资金流掩盖虚假交易，形成典型的系统性跨境财务造假；AI 则依托其原有造假路径，针对海外项目真实 性难核验、单据伪造易暴露的核心漏洞，从交易拆分、单据仿真、资金流闭环等维度升级造假手段，让违规行为更贴合跨境工程企业经营实际； 而 AI 反造假",
+    aiDesc:"AI依托建筑装饰行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对雅百特的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"雅百特原财务造假手段来源上海证券报关于收到中国证券监督管理委员会《行政处罚决定书》的公告：https://paper.cnstock.com/html/2017-12/16/content_922315.htm" },
+  { company:"洪涛股份", industry:"建筑装饰", industryCode:"material",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2018, severity:"重大",
+    fraudDesc:"洪涛股份作为建筑装饰行业企业，依托公装装饰工程项目实施周期长、项目垫资规模大、收入确认与工程进度挂钩的行业特点，存在提前确 认工程项目收入、借助项目垫资掩盖关联方资金占用、未按规定披露重大信息等贴合建筑装饰行业特性的财务造假行为（企业已因信息披露违法 违规被证监会立案调查）；AI 则依托洪涛股份原有造假路径，结合建筑装饰公装项目的实施、结算、信息披露规律，对收入确认、资金流转、信 息披露等造假环节",
+    aiDesc:"AI依托建筑装饰行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对洪涛股份的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"洪涛股份信息披露违法违规事项来源深圳证监局关于对深圳洪涛集团股份有限公司采取责令改正措施的决定： https://www.csrc.gov.cn/shenzhen/c104320/c7487443/content.shtml" },
+  { company:"永太科技", industry:"精细化工", industryCode:"chemical",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI生成\"披露豁免\"申请材料", "AI智能评估重大性阈值", "AI多语言合规包装"],
+    anti:["跨期信息对比分析", "公告与实际数据核验", "独立信息核实机制"],
+    fraudType:"disclosure", year:2021, severity:"一般",
+    fraudDesc:"永太科技作为精细化工领域企业，依托医药、锂电材料等多品类业务布局的行业特点，在投资者关系互动平台提前披露与吉利德公司业务合 作等产品相关信息，相关答复时间早于官方股价异常波动公告披露时间，利用信息披露的时间差造成市场信息不对称，形成贴合精细化工企业投 资者互动频繁特征的信息披露类财务违规；AI 则依托永太科技原有违规路径，结合精细化工行业的产品合作披露规范、投资者互动回复规律，对 信息披露时间、互",
+    aiDesc:"AI依托精细化工行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对永太科技的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"永太科技原财务造假手段来源浙江证监局： https://www.csrc.gov.cn/zhejiang/c103940/c1576697/content.shtml" },
+  { company:"得利斯", industry:"食品加工", industryCode:"food",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI设计多层资金流转路径", "AI批量生成资金往来单据", "AI拆分隐匿关联交易"],
+    anti:["关联方资金图谱分析", "区块链资金溯源存证", "资金闭环路径识别"],
+    fraudType:"fund", year:2020, severity:"一般",
+    fraudDesc:"得利斯作为食品加工行业企业，依托关联方往来频繁、股权收购业务核算复杂的行业与经营特点，通过与关联方发生非经营性资金往来未及 时披露，且预付股权收购款未按规定进行会计确认与计量，导致财报存在虚假记载，形成贴合食品企业资本运作与资金管理特征的信息披露类财 务违规；AI 则依托其原有违规路径，结合食品行业资金流转快、关联交易多样的规律，对关联交易隐瞒、会计核算操纵等环节进行仿真升级，让 违规行为更贴合企",
+    aiDesc:"AI依托食品加工行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对得利斯的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"得利斯原财务造假手段来源中国证券网证监会对 8 宗案件作出行政处罚（第一则）以及中国财经网未披露临时信息 得利斯遭罚 30 万（第二则）：1. https://news.cnstock.com/news,yw-201610-3921597.html2. https://finance.china.com.cn/news/20160919/3909" },
+  { company:"人人乐", industry:"零售/商超", industryCode:"retail",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI仿造存货技术状态文档", "AI生成项目延期证明材料", "AI智能调控折现率取值"],
+    anti:["存货物理状态独立核查", "折现率合理性校验", "同行业估值交叉验证"],
+    fraudType:"asset", year:2020, severity:"一般",
+    fraudDesc:"人人乐作为零售行业连锁商超企业，借门店分布广、资金流转频繁、会计核算环节多的行业特点，通过高估递延所得税资产、会计核算不及 时等方式进行会计处理违规，还因业绩预告编制审慎性不足导致业绩大幅修正，同时存在资金管控重大缺陷引发 3500 万元资金被挪用，利用零 售行业的业务特性掩盖财务核算与资金管理的造假问题，形成贴合连锁商超经营特征的财务造假；AI 则依托人人乐原有造假路径，结合零售行业 的会计核算",
+    aiDesc:"AI依托零售/商超行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对人人乐的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"人人乐原财务造假手段来源深圳证监局关于对人人乐连锁商业集团股份有限公司采取责令改正措施的决定： https://www.csrc.gov.cn/shenzhen/c104320/c1593188/content.shtml" },
+  { company:"胜利精密", industry:"智能制造", industryCode:"manufacture",
+    fraud:["收购标的智诚光学实施业绩造假"],
+    ai:["AI构建虚假评估证据链", "AI批量生成资产估值报告", "AI模拟可比公司市场数据"],
+    anti:["生物资产卫星遥感核查", "实地盘点与账面对比", "减值敏感性分析"],
+    fraudType:"asset", year:2019, severity:"重大",
+    fraudDesc:"胜利精密作为智能制造领域企业，核心业务覆盖消费电子精密结构件、汽车零部件等，依托制造业并购重组频繁、标的公司业务核查难度大 的行业特点，通过收购标的智诚光学实施业绩造假，借助虚开发票、虚假销售、成本核算操纵等方式虚增利润，形成 “并购标的造假→上市公司合 并报表失真” 的典型造假模式；AI 则依托其原有造假路径，结合制造行业并购重组的业绩承诺逻辑、精密制造业务特性与财务核算规则，对标的 公司业绩造",
+    aiDesc:"AI依托智能制造行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对胜利精密的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"胜利精密财务造假手段来源中国证监会行政处罚决定书： https://www.csrc.gov.cn/csrc/c101928/c5968145/content.shtml" },
+  { company:"金正大", industry:"农资/化肥", industryCode:"agri",
+    fraud:["虚构生产过程", "空转资\n金等方式掩盖造假痕迹"],
+    ai:["AI批量生成虚假合同单据", "AI仿真收入数据规避检测", "多版本财务数据智能生成"],
+    anti:["交易模式异常检测", "资金流向穿透核查", "收入确认时点验证"],
+    fraudType:"revenue", year:2020, severity:"特大",
+    fraudDesc:"金正大作为农资化肥行业龙头企业，借化肥行业贸易链条繁杂、存货（化肥、原材料）盘点难度大、关联交易隐蔽性强的行业特点，通过虚 构贸易业务虚增逾 230 亿营收及近 20 亿利润总额，虚增存货、虚减应付票据，未按规定披露关联方及关联交易，同时通过虚构生产过程、空转资 金等方式掩盖造假痕迹，形成贴合农资化肥企业经营特征的系统性财务造假；AI 则依托金正大原有造假路径，结合农资化肥行业的业务逻辑、资 产特",
+    aiDesc:"AI依托农资/化肥行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对金正大的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"金正大生态工程集团股份有限公司原财务造假手段来源于中国证监会行政处罚决定书、市场禁入决定书、深圳证券交易所监管警示决定及官方公告等权威披露信息，后续链接顺序按上述罗列内容依次对应（即第一条链接对应中国证监会行政处罚决定书，第二条对应市场禁入决定书，第三条对应深圳证券交易所金正大关于收到行政监管措施决定书的公告）                     " },
+  { company:"中山达华", industry:"信息科技", industryCode:"it",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI生成虚假重大事项说明", "AI优化信息披露完整性", "AI模拟合规自查报告"],
+    anti:["重大性阈值合规检测", "监管报告真实性核查", "信息完整性量化评估"],
+    fraudType:"disclosure", year:2023, severity:"一般",
+    fraudDesc:"中山达华智能科技股份有限公司作为以“通信网”和“数字屏”为核心业务的科技企业，在 2021 年至 2023 年期间存在多项信息披露违法违 规行为。公司未按规定披露金额达 7.95 亿元的控股子公司重大设备采购合同（占净资产 58.57%）及其解除情况，导致 2021 年至 2023 年年度报告 存在重大遗漏。同时，公司 2023 年在尚未转移两家子公司控制权的情况下提前确认处置收益，虚增利润 61",
+    aiDesc:"AI依托信息科技行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对中山达华的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"达华智能原财务造假手段来源于公司媒体公告：https://money.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=002512&id=11976072" },
+  { company:"山东龙力", industry:"生物科技", industryCode:"chemical",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI模拟真实交易背景材料", "AI生成客户信用评估报告", "AI优化收入确认时间节点"],
+    anti:["行业收入基准对比模型", "多维数据交叉验证", "客户侧独立核实"],
+    fraudType:"revenue", year:2017, severity:"特大",
+    fraudDesc:"，在 2015 年至 2017 年上半年期间，通过直接删改财务核算账套、伪造会计凭证等极 山东龙力生物科技股份有限公司作为“生物燃料第一股” 端恶劣手段实施系统性财务造假。公司通过删除、修改财务数据，导致 2015 年虚增银行存款 4.99 亿元、虚减借款本金 17.53 亿元、虚增利润近 1.4 亿元；2016 年虚增银行存款 1.27 亿元、虚减借款本金 28.20 亿元、虚增利润近 2.5 ",
+    aiDesc:"AI依托生物科技行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对山东龙力的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"龙力生物原财务造假手段来源于中国证监会行政处罚决定书、市场禁入决定书，后续链接顺序按上述罗列内容依次对应（即第一条链接对应中国证监会行政处罚决定书、第二条链接对应中国证监会市场禁入决定书）                                ：1.   https://www.csrc.gov.cn/csrc/c101928/c7e691" },
+  { company:"首航高科", industry:"新能源", industryCode:"chemical",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI设计多层资金流转路径", "AI批量生成资金往来单据", "AI拆分隐匿关联交易"],
+    anti:["关联方资金图谱分析", "区块链资金溯源存证", "资金闭环路径识别"],
+    fraudType:"fund", year:2021, severity:"一般",
+    fraudDesc:"首航高科作为新能源领域（光热发电、储能等）企业，依托新能源行业 “项目投资规模大、募集资金使用频繁、关联交易隐蔽” 的经营特 点，存在未披露募集资金担保、控股股东非经营性资金占用未披露、违规划转募集资金等多重信息披露与财务合规违规，造假行为贯穿关联交易、 资金管理、募集资金使用等核心环节；AI 则依托其原有违规路径，结合新能源行业的资金运作逻辑、关联交易规律与募集资金监管要求，对担保 隐瞒、资金占",
+    aiDesc:"AI依托新能源行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对首航高科的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"首航高科原财务造假手段来源于中国证券监督管理委员会行政处罚决定书： https://www.csrc.gov.cn/csrc/c101928/c7561632/content.shtml" },
+  { company:"索菱股份", industry:"汽车电子", industryCode:"auto",
+    fraud:["虚增营业收入"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2018, severity:"重大",
+    fraudDesc:"索菱股份作为车载信息终端系统供应商，利用汽车电子行业供应链条长、资金往来复杂的特性，在 2016 年至 2018 年期间实施系统性财务造 假。公司通过虚增营业收入、虚减管理费用和财务费用等方式，三年累计虚增利润总额 8.5 亿元，其中 2016 年虚增利润占当期披露利润总额的 344.78%、2017 年占 208.13%、2018 年占 63.01%。同时，公司未披露巨额借款及担保事项（2017",
+    aiDesc:"AI依托汽车电子行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对索菱股份的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"索菱实业原财务造假手段来源于深圳证监局行政监管措施决定书，后续链接顺序按上述罗列内容依次对应(即第一至三条链接对应深圳证监局行政监管措施决定书)：1.https://www.csrc.gov.cn/shenzhen/c104320/c7537596/content.shtml2.https://www.csrc.gov.cn/shenzhen/c10" },
+  { company:"金通灵", industry:"高端装备", industryCode:"manufacture",
+    fraud:["伪造工程形象进度\n\n确认表"],
+    ai:["AI模拟真实交易背景材料", "AI生成客户信用评估报告", "AI优化收入确认时间节点"],
+    anti:["行业收入基准对比模型", "多维数据交叉验证", "客户侧独立核实"],
+    fraudType:"revenue", year:2022, severity:"重大",
+    fraudDesc:"金通灵科技集团股份有限公司作为高端装备制造企业，在 2017 年至 2022 年期间连续六年实施系统性财务造假。公司通过伪造工程形象进度 确认表、发货单等调节 EPC 总承包项目完工进度，虚增或虚减对 12 家公司的营业收入和利润总额；同时通过未发货提前确认收入、对销售退回不 冲减收入等方式虚增收入利润。2017 年、2018 年、2021 年、2022 年分别虚增营业收入 5.01 亿元、5.5",
+    aiDesc:"AI依托高端装备行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对金通灵的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"金通灵原财务造假手段来源于中国证监会江苏监管局官网：https://www.csrc.gov.cn/jiangsu/c103902/c7454412/content.shtml" },
+  { company:"青岛中程", industry:"能源/矿产", industryCode:"chemical",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI批量生成虚假合同单据", "AI仿真收入数据规避检测", "多版本财务数据智能生成"],
+    anti:["交易模式异常检测", "资金流向穿透核查", "收入确认时点验证"],
+    fraudType:"revenue", year:2022, severity:"重大",
+    fraudDesc:"青岛中程作为跨国经营的能源工程与矿产开发企业，利用海外项目信息透明度低、矿权资产估值复杂的行业特点，在 2017 年至 2022 年期间 实施系统性财务造假。公司通过菲律宾风电项目在不符合收入确认条件的情况下虚假确认收入和利润、光伏项目虚增工程进度提前确认收入等方 式，累计虚增及虚减营业收入数十亿元；同时，在明知印尼 CIS 煤矿采矿权证被撤销、JAYA 锰矿矿权到期的情况下，未对上述资产予以转销",
+    aiDesc:"AI依托能源/矿产行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对青岛中程的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"中资中程原财务造假手段来源于中国证监会行政处罚决定书：https://www.csrc.gov.cn/csrc/c101928/c7592243/content.shtml" },
+  { company:"山东美晨", industry:"园林/生态", industryCode:"material",
+    fraud:["虚假\n\n采购劳务及苗木虚增施工成本", "伪造完工百分比虚增收入", "虚假销售苗木虚增利润等手段"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2021, severity:"重大",
+    fraudDesc:"山东美晨生态环境股份有限公司作为园林绿化与生态修复行业的上市公司，主营业务涵盖园林工程施工、生态修复等，具有工程项目周期长、 成本核算复杂、完工百分比主观性强的行业特点。公司利用 2014 年收购的子公司杭州赛石园林作为造假主体，在 2014 年至 2018 年期间通过虚假 采购劳务及苗木虚增施工成本、伪造完工百分比虚增收入、虚假销售苗木虚增利润等手段，连续五年系统性财务造假，累计虚增营业收入 1",
+    aiDesc:"AI依托园林/生态行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对山东美晨的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"兴源环境科技原财务造假手段来源于浙江证监局行政处罚决定书、行政监管措施决定书等权威披露信息，后续链接顺序按上述罗列内容依次对应(即第一条链接对应浙江证监局行政处罚决定书，第二条对应行政监管措施决定书)：1.https://www.csrc.gov.cn/zhejiang/c103950/c7455408/content.shtml2.https://" },
+  { company:"立方数科", industry:"建筑信息化", industryCode:"it",
+    fraud:["总额法违规核算代理业务"],
+    ai:["AI模拟真实交易背景材料", "AI生成客户信用评估报告", "AI优化收入确认时间节点"],
+    anti:["行业收入基准对比模型", "多维数据交叉验证", "客户侧独立核实"],
+    fraudType:"revenue", year:2023, severity:"重大",
+    fraudDesc:"立方数科股份有限公司作为建筑信息化领域的软件企业，主营业务涵盖智慧城市、建筑数字化等，具有软件销售与贸易业务并行的业务特点。 公司在 2021 年至 2023 年期间，通过总额法违规核算代理业务、开展无商业实质的融资性贸易、实施资金闭环的虚假贸易等三种手段系统性虚增 营收规模，连续三年虚增营业收入合计 6.37 亿元（其中 2021 年虚增 2.80 亿元、占比 50.09%，2022 年虚增 3",
+    aiDesc:"AI依托建筑信息化行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对立方数科的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"立方数科原财务造假手段来源于中国证监会官网：https://www.csrc.gov.cn/anhui/c103988/c7616059/content.shtml" },
+  { company:"创意信息", industry:"大数据/IT", industryCode:"it",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI批量生成虚假合同单据", "AI仿真收入数据规避检测", "多版本财务数据智能生成"],
+    anti:["交易模式异常检测", "资金流向穿透核查", "收入确认时点验证"],
+    fraudType:"revenue", year:2022, severity:"重大",
+    fraudDesc:"创意信息技术股份有限公司作为大数据、数据库及 5G 技术领域的软件企业，主营业务涵盖能源大数据、公共安全大数据、国产数据库等，具 有技术开发服务周期长、软硬件集成业务收入确认复杂的行业特点。公司在 2022 年 11 月与国网四川综合能源服务有限公司开展协同一体机销售 业务、与四川中电启明星信息技术有限公司开展大数据平台硬件及软件销售业务时，在不具有对商品控制权的情形下采用总额法确认收入，导致 2",
+    aiDesc:"AI依托大数据/IT行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对创意信息的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"创意信息原财务造假手段来源于中国证监会四川监管局官网：https://www.csrc.gov.cn/sichuan/c104900/c7590988/content.shtml" },
+  { company:"欣泰电气", industry:"电气设备", industryCode:"manufacture",
+    fraud:["上市后违规披露重要信息"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2015, severity:"特大",
+    fraudDesc:"欣泰电气作为创业板首例因欺诈发行强制退市的电气设备制造企业， 依托电气设备行业 “应收账款占比高、 主营业务聚焦输变电设备研发生产， IPO 审核聚焦盈利稳定性” 的经营与资本运作特点，通过虚减应收账款、少计提坏账准备等核心手段虚构财务数据，欺诈发行骗取上市资格，上 市后持续沿用造假手段违规披露信息，形成 “IPO 欺诈发行 + 上市后持续造假” 的典型违规模式；AI 则依托其原有造假路径，结合电",
+    aiDesc:"AI依托电气设备行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对欣泰电气的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"欣泰电气原财务造假手段来源中国证监会行政处罚决定书（丹东欣泰电气股份有限公司、温德乙、刘明胜等 18 名责任人员）： https://www.csrc.gov.cn/csrc/c101928/c1042801/content.shtml" },
+  { company:"易事特", industry:"电源/数据中心", industryCode:"it",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI模拟真实交易背景材料", "AI生成客户信用评估报告", "AI优化收入确认时间节点"],
+    anti:["行业收入基准对比模型", "多维数据交叉验证", "客户侧独立核实"],
+    fraudType:"revenue", year:2021, severity:"重大",
+    fraudDesc:"易事特作为曾连续跻身全球新能源企业 500 强的行业标杆，利用电源设备及数据中心集成业务模式复杂、资金流转隐蔽的行业特点，在 2017 年至 2021 年期间实施系统性财务造假。公司通过三种不具有商业实质的业务虚增经营业绩：一是开展虚假贸易业务，通过安排采购付款和销售回 款形成资金闭环，无实物流转或货物在虚构贸易链中循环使用；二是开展具有融资性质的代采业务和代理业务，实质为资金融通，却按总额法确 ",
+    aiDesc:"AI依托电源/数据中心行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对易事特的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"易事特原财务造假手段来源于中国证监会行政处罚决定书，后续链接顺序按上述罗列内容依次对应(即第一至二条链接对应中国证监会行政处罚决定书）：1.https://www.csrc.gov.cn/csrc/c101928/c7530912/content.shtml2.https://www.csrc.gov.cn/csrc/c101928/c1042600" },
+  { company:"东方通科技", industry:"软件/IT", industryCode:"it",
+    fraud:["虚构业务"],
+    ai:["AI批量生成虚假合同单据", "AI仿真收入数据规避检测", "多版本财务数据智能生成"],
+    anti:["交易模式异常检测", "资金流向穿透核查", "收入确认时点验证"],
+    fraudType:"revenue", year:2020, severity:"重大",
+    fraudDesc:"北京东方通科技股份有限公司作为软件和信息技术服务行业的上市公司，主营业务涵盖基础软件、信息安全等领域，具有项目周期长、收入 确认复杂的行业特点。公司利用 2018 年收购的子公司北京泰策科技有限公司作为造假主体，在 2019 年至 2022 年期间通过虚构业务、提前确认收 入等方式连续四年虚增收入利润，累计虚增营业收入 4.32 亿元、虚增利润总额 3.14 亿元（其中 2022 年虚增利润占当期",
+    aiDesc:"AI依托软件/IT行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对东方通科技的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"东方通原财务造假手段来源于中国证监会官网：https://www.csrc.gov.cn/beijing/c105546/c7597380/content.shtml" },
+  { company:"长药控股", industry:"医药/设备", industryCode:"pharma",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2021, severity:"重大",
+    fraudDesc:"长药控股（曾用名康跃科技）作为医药制造与设备制造跨界经营企业，主营业务涵盖医药生产、光伏设备等领域，具有并购重组频繁、子公 司管控复杂、医药行业单据流转环节多的行业特点。公司 2020 年收购的子公司湖北长江星成为造假核心，其下属两家制药企业在 2021 年至 2023 年期间通过制作虚假入库单、出库单，在无真实销售业务的情况下确认收入，连续三年虚增营业收入 7.33 亿元、虚增利润总额 1.63",
+    aiDesc:"AI依托医药/设备行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对长药控股的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"长药控股原财务造假手段来源于中国证监会山东监管局官网：https://www.csrc.gov.cn/shandong/c104216/c7611042/content.shtml" },
+  { company:"暴风集团", industry:"互联网视频", industryCode:"it",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI构建虚假评估证据链", "AI批量生成资产估值报告", "AI模拟可比公司市场数据"],
+    anti:["生物资产卫星遥感核查", "实地盘点与账面对比", "减值敏感性分析"],
+    fraudType:"asset", year:2018, severity:"重大",
+    fraudDesc:"暴风集团作为互联网视频行业曾经的“妖股”，在 2015 年上市后激进扩张，最终因 MPS 海外并购项目及商誉减值处理不当引发系统性信息披 露违法。2018 年，公司子公司暴风智能因资金链断裂、经营停滞出现严重减值迹象，但公司在 2018 年年报中未计提商誉减值准备，导致虚增利润 1.28 亿元；同时，商誉减值测试采用吉利科技投资的重大假设未披露，构成重大遗漏。2016 年，公司在 MPS 项目收购",
+    aiDesc:"AI依托互联网视频行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对暴风集团的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"暴风集团原财务造假手段来源于中国证监会行政处罚决定书、市场禁入决定书、北京证监局行政监管措施决定书等权威披露信息，后续链接顺序按上述罗列内容依次对应(即第一条链接对应中国证监会行政处罚决定书，第二条对应市场禁入决定书，第三至五条链接对应北京证监局行政监管措施决定书)：1.https://www.csrc.gov.cn/csrc/c101928/c16" },
+  { company:"美尚生态", industry:"生态修复/园林", industryCode:"material",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI设计多层资金流转路径", "AI批量生成资金往来单据", "AI拆分隐匿关联交易"],
+    anti:["关联方资金图谱分析", "区块链资金溯源存证", "资金闭环路径识别"],
+    fraudType:"fund", year:2022, severity:"重大",
+    fraudDesc:"美尚生态作为聚焦生态修复、园林景观工程的环保类企业，依托园林工程行业 “PPP 项目运作复杂、子公司管控链条长、重大事项披露阈值 高” 的经营特点，通过未将控股子公司纳入合并报表、延迟披露重大诉讼等方式实施财务造假与信息披露违规，核心围绕报表合并范围操纵与重大 事项隐瞒两大维度，形成 “子公司管控漏洞 + 重大信息遗漏” 的典型工程类企业违规模式；AI 则依托其原有违规路径，结合园林工程行业的 P",
+    aiDesc:"AI依托生态修复/园林行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对美尚生态的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"美尚生态原财务造假手段来源中国证监会行政处罚决定书（美尚生态、王迎燕、徐晶）： https://www.csrc.gov.cn/csrc/c101928/c7425772/content.shtml" },
+  { company:"普利制药", industry:"医药", industryCode:"pharma",
+    fraud:["系统性财务造假虚增利润总额"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2022, severity:"重大",
+    fraudDesc:"普利制药作为聚焦化学药物研发、生产与销售的医药企业，依托医药行业 “海外销售链条复杂、药品注册与生产核查专业性强、营收利润波动 敏感” 的经营特点，通过系统性财务造假虚增利润总额，2021-2022 年累计虚增利润 6.69 亿元，占该两年披露利润总额的 73.83%，触及重大违 法强制退市情形，形成 “全周期利润操纵 + 财务报表虚假记载” 的典型医药企业造假模式；AI 则依托其原有造假路径，结",
+    aiDesc:"AI依托医药行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对普利制药的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"普利制药原财务造假手段来源中国证券监督管理委员会行政处罚决定书： https://www.csrc.gov.cn/csrc/c101928/c7547779/content.shtml" },
+  { company:"南京越博", industry:"新能源汽车", industryCode:"auto",
+    fraud:["虚构\n\n新能源汽车动力总成销售"],
+    ai:["AI模拟真实交易背景材料", "AI生成客户信用评估报告", "AI优化收入确认时间节点"],
+    anti:["行业收入基准对比模型", "多维数据交叉验证", "客户侧独立核实"],
+    fraudType:"revenue", year:2022, severity:"重大",
+    fraudDesc:"南京越博动力系统股份有限公司作为新能源汽车动力系统领域的创业板上市公司，在 2018 年至 2022 年连续五年系统性财务造假，通过虚构 新能源汽车动力总成销售、视觉识别板卡代加工等业务以及退货不入账等方式虚增收入利润，累计虚增营业收入 9.46 亿元、虚增利润总额 2.44 亿 元（其中 2018 年虚增收入占营收 86.08%、虚增利润占利润总额 546.30%） ，同时虚假出售子公司、违规核",
+    aiDesc:"AI依托新能源汽车行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对南京越博的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"越博动力财务造假手段来源于中国证监会行政处罚决定书：1.   https://www.csrc.gov.cn/csrc/c101928/c7595362/content.shtml（                                                                〔2025〕126 号）2.   htt" },
+  { company:"长江投资", industry:"物流/矿业", industryCode:"transport",
+    fraud:["隐瞒大额应收账款无法回收的重大风险", "不及时披露核心资产减值迹象"],
+    ai:["AI设计多层资金流转路径", "AI批量生成资金往来单据", "AI拆分隐匿关联交易"],
+    anti:["关联方资金图谱分析", "区块链资金溯源存证", "资金闭环路径识别"],
+    fraudType:"fund", year:2019, severity:"一般",
+    fraudDesc:"长江投资实业股份有限公司作为上海国资控股的综合类企业，业务涵盖物流、仓储、贸易及矿业投资，其财务造假主要利用跨行业经营的复 杂性，通过隐瞒大额应收账款无法回收的重大风险、不及时披露核心资产减值迹象，导致业绩预告与最终实际业绩产生巨大偏差，严重误导投资 者。AI 则依托长江投资原有造假路径，结合综合类企业多板块业务特点，对风险隐瞒、减值测试、业绩预告平滑等手段进行仿真升级，使财务数 据波动更贴合企业",
+    aiDesc:"AI依托物流/矿业行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对长江投资的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"长江投资实业原财务造假手段来源于中国证监会上海监管局警示函、上海证券交易所官方公告，后续链接顺序按上述罗列内容依次对应（即第一条链接对应中国证监会上海监管局警示函、第二条链接对应上海证券交易所官方公告）                                       ：1.   https://www.csrc.gov.cn/shang" },
+  { company:"新亿股份", industry:"贸易/物业", industryCode:"retail",
+    fraud:["关联方非关联化运作\n\n虚构贸易收入"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2018, severity:"重大",
+    fraudDesc:"新亿作为以贸易、物业相关业务为主的综合类企业，依托贸易业务资金往来密集、物业收入核算灵活的经营特点，通过关联方非关联化运作 虚构贸易收入、伪造物业服务与租金抵账业务确认虚假收入，以此规避连续亏损退市风险，形成 “虚假收入 + 跨期调节” 的典型财务造假模式； AI 则依托其原有造假路径，结合贸易与物业行业的业务逻辑、收入确认规则与资金流转特性，对虚构交易、收入操纵等环节进行仿真升级，让造 假更贴合",
+    aiDesc:"AI依托贸易/物业行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对新亿股份的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"新亿原财务造假手段来源中国证监会行政处罚决定书（*ST 新亿、黄伟、李勇）：https://www.csrc.gov.cn/csrc/c101928/c2314047/content.shtml" },
+  { company:"江苏吴中", industry:"医药/贸易", industryCode:"pharma",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI模拟真实交易背景材料", "AI生成客户信用评估报告", "AI优化收入确认时间节点"],
+    anti:["行业收入基准对比模型", "多维数据交叉验证", "客户侧独立核实"],
+    fraudType:"revenue", year:2019, severity:"重大",
+    fraudDesc:"江苏吴中医药发展股份有限公司作为医药制造与贸易业务并行的老牌上市公司，主营业务涵盖化学药、原料药以及大宗贸易等领域，具有医 药主业与贸易业务双轮驱动、关联方网络复杂、资金流转频繁的行业特点。公司实际控制人钱群山利用控制权优势，通过搭建隐秘关联方网络、 构造无商业实质的循环贸易，在 2020 年至 2023 年期间连续四年虚增收入利润，并以此掩盖巨额关联方资金占用，累计虚增营业收入 17.71 亿元",
+    aiDesc:"AI依托医药/贸易行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对江苏吴中的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"江苏吴中原财务造假手段来源于中国证监会官网：https://www.csrc.gov.cn/csrc/c101928/c7598059/content.shtml" },
+  { company:"山东卓朗", industry:"信息科技/IT", industryCode:"it",
+    fraud:["虚构服务器销售业务", "虚构软件系统集成服务", "未披露重大对外担保"],
+    ai:["AI生成虚假采购销售合同", "AI设计资金闭环流程", "AI隐藏担保相关信息"],
+    anti:["关联方资金闭环识别", "三流一致性穿透核查", "资产抵押登记信息核验"],
+    fraudType:"revenue", year:2023, severity:"重大",
+    fraudDesc:"通过虚构服务器、软件及系统集成服务销售业务，形成关联公司资金闭环，2019年至2023年累计虚增营收18.15亿元、虚增利润总额13.37亿元，同时未披露子公司重大对外担保事项。",
+    aiDesc:"山东卓朗的AI升级路径依托信息科技行业特点，通过批量生成符合行业逻辑的虚假合同、签收单据，并智能调控资金流转路径，使资金闭环更具隐蔽性。",
+    antiDesc:"需从服务器资产溯源、软件交付痕迹、资金回路等维度进行穿透核查，识别无商业实质的关联交易闭环。",
+    penalty:"证监会对山东卓朗及相关责任人作出行政处罚决定，虚增营收累计18.15亿元，各期虚增比例21%-72%。" },
+  { company:"凯乐科技", industry:"专网通信", industryCode:"it",
+    fraud:["虚构核心业务"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2021, severity:"特大",
+    fraudDesc:"凯乐科技作为专网通信行业相关企业，借专网通信业务链条长、生产物流核查难度大的行业特点，通过虚构核心业务、伪造全流程单据虚增 超 512 亿元营收及 59.36 亿元利润，还虚增研发费用调节利润结构、违规变更会计政策掩盖业绩问题，同时未合规披露关联方担保、管理层集 体主导全链条造假形成虚假业务闭环，打造贴合专网通信企业经营表象的系统性财务造假；AI 则依托凯乐原有造假路径，结合专网通信行业的 业务逻",
+    aiDesc:"AI依托专网通信行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对凯乐科技的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"凯乐科技原财务造假手段来源于中国证监会行政处罚决定书、市场禁入决定书、湖北证监局行政监管措施决定书、上海证券交易所监管警示决定及官方公告等权威披露信息，后续链接顺序按上述罗列内容依次对应（即第一条链接对应中国证监会行政处罚决定书，第二条对应市场禁入决定书，第三条对应湖北证监局行政监管措施决定书，第四条对应上海证券交易所监管警示决定）" },
+  { company:"江苏舜天", industry:"贸易/纺织", industryCode:"manufacture",
+    fraud:["虚构贸易合同"],
+    ai:["AI模拟真实交易背景材料", "AI生成客户信用评估报告", "AI优化收入确认时间节点"],
+    anti:["行业收入基准对比模型", "多维数据交叉验证", "客户侧独立核实"],
+    fraudType:"revenue", year:2020, severity:"特大",
+    fraudDesc:"江苏舜天作为省属国有控股贸易企业，核心经营服装进出口、国内贸易等业务，依托专网通信（通讯器材内贸）业务闭环复杂、贸易类单据 核查难度高、上下游客户追溯繁琐的行业及业务特性，通过参与虚假自循环业务，在 2009 年至 2021 年间累计虚增营收超 103 亿元、虚增利润总 额超 9.34 亿元。其通过虚构贸易合同、发票及资金流转闭环，隐瞒业务无商业实质的核心问题，还借助会计差错更正掩盖造假痕迹，形成",
+    aiDesc:"AI依托贸易/纺织行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对江苏舜天的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"海越能源原财务造假手段来源于中国证监会浙江监管局官网：     https://www.csrc.gov.cn/zhejiang/c103950/c7550374/content.shtml（                                                                    〔2025〕9 号） " },
+  { company:"九有股份", industry:"互联网/公关", industryCode:"it",
+    fraud:["虚构互联网信\n息服务"],
+    ai:["AI批量生成虚假合同单据", "AI仿真收入数据规避检测", "多版本财务数据智能生成"],
+    anti:["交易模式异常检测", "资金流向穿透核查", "收入确认时点验证"],
+    fraudType:"revenue", year:2019, severity:"重大",
+    fraudDesc:"九有多业务板块交叉、新兴业务（互联网信息服务、公关营销）核查难度大、关联交易隐蔽性强的行业及自身经营特点，通过虚构互联网信 息服务、股份（曾用名*ST 九有）作为主营业务多次变更的上市公司，涉及手机摄像模组制造、供应链管理、公关营销、化妆品销售等多个领域， 借公关营销等业务虚增营收及利润，未按规定披露关联交易导致财务报告虚假记载及重大遗漏，形成贴合其业务多元化、主业频繁变更特征的系 统性财务造假；",
+    aiDesc:"AI依托互联网/公关行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对九有股份的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"九有股份原财务造假手段来源于新浪财经《*ST 九有收到退市决定 连续四年财务造假曝光》                                            ：https://finance.sina.com.cn/stock/stockzmt/2025-06-17/doc-infaiwtm9999540.shtml" },
+  { company:"康美药业", industry:"医药/中药", industryCode:"pharma",
+    fraud:["全科目同步虚增打造 “完美报表”"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2019, severity:"特大",
+    fraudDesc:"康美药业作为中药行业龙头，借中药材存货核查难度大、医药销售链条复杂的行业特点，通过伪造银行单据虚增近 300 亿货币资金、虚构 医药购销合同虚增近 300 亿营收，还利用中药材品类特殊性操纵存货盘点、借医药行业资金往来密集掩盖大股东资金占用，同时跨期调节应收 坏账计提、成本费用结转，通过全科目同步虚增打造 “完美报表”，形成贴合中药企业经营特征的系统性财务造假；AI 则依托康美原有造假路 径，结合",
+    aiDesc:"AI依托医药/中药行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对康美药业的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"康美药业原财务造假手段来源于证监会官网：1. https://www.csrc.gov.cn/csrc/c100028/c1001009/content.shtml2. https://www.csrc.gov.cn/csrc/c100028/c1000782/content.shtml" },
+  { company:"广汇物流", industry:"物流/房地产", industryCode:"realestate",
+    fraud:["伪造房地产项目交付资料提前确认收入", "伪造房地         程"],
+    ai:["AI模拟真实交易背景材料", "AI生成客户信用评估报告", "AI优化收入确认时间节点"],
+    anti:["行业收入基准对比模型", "多维数据交叉验证", "客户侧独立核实"],
+    fraudType:"revenue", year:2020, severity:"重大",
+    fraudDesc:"广汇物流作为 “物流 + 房地产” 双主业企业，依托房地产行业收入确认周期长、项目交付流程复杂，及物流贸易业务资金往来密集的经营特 点，通过伪造房地产项目交付资料提前确认收入、借助贸易与采购业务掩盖控股股东非经营性资金占用，导致多期定期报告财务信息虚假记载， 形成贴合双主业企业资产运营与资金管理特征的系统性财务造假；AI 则依托其原有造假路径，结合房地产与物流行业的业务逻辑、项目运作规律 与资金流",
+    aiDesc:"AI依托物流/房地产行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对广汇物流的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"广汇物流原财务造假手段来源中国证券监督管理委员会行政处罚决定书： https://www.csrc.gov.cn/csrc/c101928/c7514638/content.shtml" },
+  { company:"复旦复华", industry:"医药/软件", industryCode:"pharma",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI批量生成虚假合同单据", "AI仿真收入数据规避检测", "多版本财务数据智能生成"],
+    anti:["交易模式异常检测", "资金流向穿透核查", "收入确认时点验证"],
+    fraudType:"revenue", year:2023, severity:"重大",
+    fraudDesc:"上海复旦复华科技股份有限公司作为主营医药、软件、园区开发的综合性企业，利用房地产业务项目周期长、成本核算复杂的行业特点，在 2019 年至 2023 年期间通过两种手段调节利润：一是 2019-2020 年未足额结转“复华文苑”住宅项目施工成本，少计营业成本 5,324.42 万元，虚增 利润 5,324.42 万元（其中 2019 年虚增利润占当年利润总额 60.25%） ；二是 2023 年将",
+    aiDesc:"AI依托医药/软件行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对复旦复华的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"复旦复华原财务造假手段来源于中国证监会上海监管局官网：https://www.csrc.gov.cn/shanghai/c103864/c7610029/content.shtml" },
+  { company:"上海普天", industry:"通信设备", industryCode:"it",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2021, severity:"重大",
+    fraudDesc:"上海普天作为国务院国资委所属中国普天集团旗下企业，深耕通信设备制造、智能终端及园区运营领域，借通信设备贸易流程复杂、虚拟库 存货核查难度大、关联交易隐蔽性强的行业特点，通过开展无实物交割的虚假三方贸易虚增营收与利润，违规延期结转成本费用调节利润，将亏 损披露为盈利，形成贴合通信设备制造企业经营特征的财务造假模式；AI 则依托上海普天原有造假路径，结合通信设备行业的业务逻辑、贸易流 程与资金往来规律",
+    aiDesc:"AI依托通信设备行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对上海普天的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"上海普天原有造假手段来源于证监会上海监管局行政处罚决定书及公开披露信息，后续链接顺序按上述罗列内容依次对应（即第一条链接对应中国证券监督管理委员会上海监管局行政处罚决定书，第二条对应上海证券交易所纪律处分决定）                                           ：1.   https://www.csrc.gov.c" },
+  { company:"大连大控", industry:"综合类", industryCode:"manufacture",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI生成\"披露豁免\"申请材料", "AI智能评估重大性阈值", "AI多语言合规包装"],
+    anti:["跨期信息对比分析", "公告与实际数据核验", "独立信息核实机制"],
+    fraudType:"disclosure", year:2017, severity:"一般",
+    fraudDesc:"大连大福控股股份有限公司（*ST 大控）作为沪市老牌上市公司，在 2013 年至 2017 年期间多次突破信息披露底线，成为 A 股市场罕见的“累 犯式”造假典型。公司 2013 年为控股股东及关联方提供 3.5 亿元担保未披露，2015 年被首次行政处罚；此后在调查期间及处罚后仍不收手，继续 实施、瞒报多笔大额违规担保及诉讼纠纷。2017 年二次处罚认定三大违法事实：未披露对大显集团 1.4 亿",
+    aiDesc:"AI依托综合类行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对大连大控的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"大连控股原财务造假手段来源于中国证监会大连监管局官网：https://www.csrc.gov.cn/dalian/c104244/c1352247/content.shtml" },
+  { company:"新潮能源", industry:"石油/天然气", industryCode:"chemical",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI设计多层资金流转路径", "AI批量生成资金往来单据", "AI拆分隐匿关联交易"],
+    anti:["关联方资金图谱分析", "区块链资金溯源存证", "资金闭环路径识别"],
+    fraudType:"fund", year:2020, severity:"重大",
+    fraudDesc:"新潮能源作为以石油及天然气勘探开采为核心业务的能源企业，利用海外资产管控复杂、股权收购资金链条隐蔽的行业特点，在 2017 年至 2025 年期间多次发生重大信息披露违法违规。2017 年，公司在未履行内部决策程序的情况下，为关联方一笔 6.13 亿元债务回购提供担保（占 2016 年 经审计净资产 11.24%），未及时披露也未在 2017 年年报、2018 年半年报中披露，直至 2018 年涉",
+    aiDesc:"AI依托石油/天然气行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对新潮能源的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"新潮能源原财务造假手段来源于中国证监会行政处罚决定书、山东证监局行政处罚决定书、行政监管措施决定书等权威披露信息，后续链接顺序按上述罗列内容依次对应(即第一条链接中国证 监会行政处罚决定书，第二条对应山东证监局行政处罚决定书，第三条对应行政监管措施决定书)：1.https://www.csrc.gov.cn/csrc/c101928/c1714747/" },
+  { company:"东方集团", industry:"农业/食品", industryCode:"food",
+    fraud:["虚构业务链条等方\n\n式"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2023, severity:"重大",
+    fraudDesc:"东方集团股份有限公司作为现代农业及健康食品领域的老牌民营企业，在 2020 年至 2023 年期间通过人为增加业务环节、虚构业务链条等方 式，长期开展农产品融资性贸易和空转循环贸易，连续四年虚增营业收入合计 161.47 亿元、虚增营业成本合计 160.73 亿元，其中 2022 年虚增收 入占当期营收比例高达 50.44%，导致年度报告存在虚假记载。公司实际控制人张宏伟组织、指使 2022 年和",
+    aiDesc:"AI依托农业/食品行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对东方集团的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"东方集团原财务造假手段来源于中国证监会官网：https://www.csrc.gov.cn/csrc/c101928/c7558037/content.shtml" },
+  { company:"上海电气", industry:"高端装备", industryCode:"manufacture",
+    fraud:["少计提应收账款坏账准备虚增利润", "未及时披露重大风险事件"],
+    ai:["AI构建虚假评估证据链", "AI批量生成资产估值报告", "AI模拟可比公司市场数据"],
+    anti:["生物资产卫星遥感核查", "实地盘点与账面对比", "减值敏感性分析"],
+    fraudType:"asset", year:2022, severity:"重大",
+    fraudDesc:"上海电气作为高端装备制造行业龙头，主营核电、风电、储能等能源装备及专网通信等业务，借装备制造行业应收账款回收周期久、资产核 查难度大的行业特点，通过少计提应收账款坏账准备虚增利润、未及时披露重大风险事件，形成贴合高端装备制造企业经营特征的信息披露违法 违规行为；AI 则依托上海电气原有违规路径，结合高端装备制造行业的业务逻辑、资产特性与资金往来规律，对坏账计提、风险披露等环节进行 仿真升级，让违规",
+    aiDesc:"AI依托高端装备行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对上海电气的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"上海电气原信息披露违法违规及财务造假手段来源于证监会上海监管局行政处罚决定书及公司公告： https://www.csrc.gov.cn/shanghai/c103864/c6932449/content.shtml" },
+  { company:"白银有色", industry:"有色金属", industryCode:"chemical",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI合规包装延迟披露方案", "AI生成多版本财务数据", "AI计算披露豁免阈值"],
+    anti:["披露及时性监测系统", "NLP信息完整性验证", "多版本文件一致性分析"],
+    fraudType:"disclosure", year:2022, severity:"一般",
+    fraudDesc:"白银有色作为综合性有色金属采选冶炼企业，利用有色行业资金往来复杂、子公司管控难度大的特点，在 2019 年至 2024 年期间存在多项信 息披露违法违规。公司在 2017 年至 2018 年累计购买 30 亿元理财产品，2019 年起产品未按期收回，但直至 2024 年 12 月才收回全部本金及收益， 期间 2019 年至 2024 年年报仅披露理财产品余额，未按规定披露产品具体情况及未能按期收回",
+    aiDesc:"AI依托有色金属行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对白银有色的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"白银有色集团原财务造假手段来源于甘肃证监局行政处罚决定书、行政监管措施决定书等权威披露信息，后续链接顺序按上述罗列内容依次对应(即第一条链接对应甘肃证监局行政处罚决定书，第二条对应行政监管措施决定书)：1.https://www.csrc.gov.cn/gansu/c104586/c7591231/content.shtml2.https://www" },
+  { company:"华锐风电", industry:"风电设备", industryCode:"manufacture",
+    fraud:["伪造吊装报告"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2015, severity:"重大",
+    fraudDesc:"华锐风电作为曾是风电设备制造行业龙头的企业，依托风电行业 “项目建设周期长、风电机组交付与吊装验收流程复杂、客户集中（以电力企 业为主）” 的经营特点，通过虚假出库、伪造吊装报告、提前确认收入等方式实施系统性财务造假，核心围绕风电机组销售业务操纵营收与利润， 形成 “虚假操作单据→提前确认收入→财务报表失真” 的典型制造企业造假模式；AI 则依托其原有造假路径，结合风电设备制造行业的业务逻辑、 项",
+    aiDesc:"AI依托风电设备行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对华锐风电的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"华锐风电原财务造假手段来源中国证监会行政处罚决定书： https://www.csrc.gov.cn/csrc/c101928/c1042913/content.shtml" },
+  { company:"上海龙宇", industry:"大宗商品贸易", industryCode:"manufacture",
+    fraud:["虚构贸易链条"],
+    ai:["AI模拟真实交易背景材料", "AI生成客户信用评估报告", "AI优化收入确认时间节点"],
+    anti:["行业收入基准对比模型", "多维数据交叉验证", "客户侧独立核实"],
+    fraudType:"revenue", year:2022, severity:"重大",
+    fraudDesc:"上海龙宇数据股份有限公司作为大宗商品贸易企业，在 2019 年至 2022 年期间通过虚构贸易链条、人为增加业务环节等方式，开展金属、油 品、乙二醇等虚假贸易，连续四年虚增营业收入合计 145.41 亿元、虚增利润总额合计 3731.96 万元（其中 2019 年虚增利润占当期利润总额 60.48%） ， 导致年度报告存在虚假记载。同时，实际控制人徐增增安排成立 13 家关联公司充当供应商、客户角",
+    aiDesc:"AI依托大宗商品贸易行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对上海龙宇的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"龙宇股份原财务造假手段来源于中国证监会上海监管局行政处罚决定书：1.   https://www.csrc.gov.cn/shanghai/c103864/c7595858/content.shtml（沪〔2025〕24 号）2.   https://www.csrc.gov.cn/shanghai/c103864/c7595888/content." },
+  { company:"康尼机电", industry:"轨道交通", industryCode:"transport",
+    fraud:["伪造销售合同"],
+    ai:["AI生成减值测试参数底稿", "AI模拟行业景气基准数据", "AI自动优化临界值参数"],
+    anti:["行业减值参数基准对比", "全量复算审计模型", "资产组划分逻辑追踪"],
+    fraudType:"asset", year:2019, severity:"重大",
+    fraudDesc:"康尼机电作为轨道交通装备制造企业，在 2017 年以 34 亿元跨界收购广东龙昕科技的过程中，因标的公司系统性财务造假而引发重大信息披 露违法。2015 年至 2017 年，龙昕科技通过私刻客户印章、伪造销售合同、虚开增值税发票、未开票即确认收入等方式，累计虚增收入 9.03 亿元、 虚增利润 3.48 亿元。同时，龙昕科技原实际控制人绕开公司治理，违规对外提供 3.045 亿元存单质押担保，导致",
+    aiDesc:"AI依托轨道交通行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对康尼机电的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"南京康尼机电原财务造假手段来源于中国证监会行政处罚决定书、市场禁入决定书等权威披露信息，后续链接顺序按上述罗列内容依次对应(即第一至二条链接对应中国证监会行政处罚决定书，第三条对应市场禁入决定书)：1.https://www.csrc.gov.cn/csrc/c101928/c8aaedf6c8f3b45b8b805ee6b9a41a4f4/conte" },
+  { company:"元成股份", industry:"环境工程", industryCode:"material",
+    fraud:["虚增越龙山项目劳务和机械成本", "虚增相应项目产值等方式"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2022, severity:"重大",
+    fraudDesc:"元成股份作为环境综合服务商，利用工程项目周期长、成本核算复杂的行业特点，在实际控制人组织指使下实施系统性财务造假。2020 年至 2022 年期间，公司通过虚增越龙山项目劳务和机械成本、虚增相应项目产值等方式，累计虚增营业收入 2.09 亿元、虚增利润总额 5046 万元，其 中 2020 年虚增利润占当期 38.60%。2022 年，公司在收到淮阴项目结算审定单后未及时调整账务，虚增营业收入 1",
+    aiDesc:"AI依托环境工程行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对元成股份的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"元成股份原财务造假手段来源于浙江证监局行政处罚决定书、行政监管措施决定书等权威披露信息，后续链接顺序按上述罗列内容依次对应(即第一条链接对应浙江证监局行政处罚决定书，第二至三条对应行政监管措施决定书)：1.https://www.csrc.gov.cn/zhejiang/c103950/c7607370/content.shtml2.https:/" },
+  { company:"绝味食品", industry:"食品/卤味", industryCode:"food",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI模拟真实交易背景材料", "AI生成客户信用评估报告", "AI优化收入确认时间节点"],
+    anti:["行业收入基准对比模型", "多维数据交叉验证", "客户侧独立核实"],
+    fraudType:"revenue", year:2019, severity:"一般",
+    fraudDesc:"绝味食品股份有限公司作为卤味食品行业的龙头企业，主营业务涵盖卤制品的生产与加盟销售，具有加盟门店数量庞大、装修业务频繁的行 业特点。公司在 2017 年至 2021 年期间，通过安排财务部员工出借个人银行账户收取加盟门店装修款项，将加盟门店装修业务完全剥离出上市公 司核算体系，导致连续五年年度报告少计营业收入，累计少计金额约 7.24 亿元，占对应年度披露营收的比例分别为 5.48%、3.79%、",
+    aiDesc:"AI依托食品/卤味行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对绝味食品的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"绝味食品原财务造假手段来源于中国证监会湖南监管局行政处罚决定书、警示函，后续链接顺序按上述罗列内容依次对应（即第一条链接对应中国证监会湖南监管局行政处罚决定书、第二条链接对应中国证监会警示函）                                  ：https://www.csrc.gov.cn/hunan/c104482/c75868" },
+  { company:"顾家家居", industry:"家居", industryCode:"manufacture",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI合规包装延迟披露方案", "AI生成多版本财务数据", "AI计算披露豁免阈值"],
+    anti:["披露及时性监测系统", "NLP信息完整性验证", "多版本文件一致性分析"],
+    fraudType:"disclosure", year:2018, severity:"一般",
+    fraudDesc:"顾家家居作为家居行业龙头企业，在 2018 年至 2019 年收购喜临门过程中，因涉嫌内幕交易被证监会立案调查。2018 年 10 月，由实际控制人 顾江生决策，指示他人准备 5 个证券账户，顾家集团自有资金通过多层账户转入上述账户，买入喜临门股票共计 1121.34 万股，金额合计 1.31 亿 元，最终亏损 642.26 万元。上述行为构成法人利用他人账户买卖证券的违法行为，顾家集团被证监会处",
+    aiDesc:"AI依托家居行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对顾家家居的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"顾家集团原财务造假手段来源于中国证监会行政处罚决定书：https://www.csrc.gov.cn/csrc/c101928/c1496814/content.shtml" },
+  { company:"思科瑞", industry:"半导体/军工", industryCode:"it",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2021, severity:"重大",
+    fraudDesc:"成都思科瑞微电子股份有限公司作为科创板军工电子元器件检测检验服务企业，主营业务涵盖军用电子元器件的测试、筛选及可靠性分析等， 具有检测业务收入确认依赖客户对账单、业务真实性与否难核验的行业特点。公司在 2022 年通过三种手段虚增收入利润：一是 2022 年 12 月虚构 与四川赛狄信息技术股份公司的检测业务 336.65 万元，在未收到待检货物且未真实开展检测业务的情况下，利用私人关系加盖对方公",
+    aiDesc:"AI依托半导体/军工行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对思科瑞的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"思科瑞原财务造假手段来源于中国证监会四川监管局官网：https://www.csrc.gov.cn/sichuan/c104900/c7590991/content.shtml" },
+  { company:"诺泰澳赛诺", industry:"生物医药", industryCode:"pharma",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI模拟真实交易背景材料", "AI生成客户信用评估报告", "AI优化收入确认时间节点"],
+    anti:["行业收入基准对比模型", "多维数据交叉验证", "客户侧独立核实"],
+    fraudType:"revenue", year:2021, severity:"重大",
+    fraudDesc:"江苏诺泰澳赛诺生物制药股份有限公司作为聚焦多肽药物及小分子化药的生物医药企业，在上市首年即 2021 年通过虚构药品技术转让业务虚 增收入利润。公司向不具备支付能力和应用条件的浙江华贝转让技术并确认收入 3000 万元，同时策划向浙江华贝增资，技术转让款最终来自公司 自身的增资款，形成资金闭环，导致 2021 年年报虚增营业收入 3000 万元、虚增利润总额 2595.16 万元（占当期利润总额 ",
+    aiDesc:"AI依托生物医药行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对诺泰澳赛诺的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"诺泰生物原财务造假手段来源于中国证监会官网：https://www.csrc.gov.cn/csrc/c101928/c7603410/content.shtml" },
+  { company:"紫晶存储", industry:"科技/存储", industryCode:"it",
+    fraud:["欺诈发行（IPO 阶段即造假）", "虚构销售业务"],
+    ai:["AI批量生成虚假合同单据", "AI仿真收入数据规避检测", "多版本财务数据智能生成"],
+    anti:["交易模式异常检测", "资金流向穿透核查", "收入确认时点验证"],
+    fraudType:"revenue", year:2021, severity:"特大",
+    fraudDesc:"紫晶存储作为科创板首批因重大违法强制退市的科技企业，主营业务聚焦光存储设备研发、生产及数据存储服务，依托存储行业 “项目验收周 期长、技术服务收入确认复杂、IPO 审核聚焦成长性” 的行业特点，通过欺诈发行（IPO 阶段即造假）、虚构销售业务、隐瞒大额对外担保等方 式实施系统性财务造假，造假贯穿 IPO 申报至上市后持续经营全周期；AI 则依托其原有造假路径，结合存储行业的业务逻辑、科创板 IPO",
+    aiDesc:"AI依托科技/存储行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对紫晶存储的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"紫晶存储原财务造假手段来源第一财经网科创板造假上市第一股迎退市“宣判”！*ST 紫晶被罚 3668 万元，董事长郑穆终身禁入市场（第一则）以及中国证监会行政处罚决定书（第二则）：1. https://m.yicai.com/news/101737779.html2. https://www.csrc.gov.cn/csrc/c101928/c74" },
+  { company:"泽达易盛", industry:"医药信息化", industryCode:"it",
+    fraud:["虚构业务合同", "隐瞒关联交易"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2021, severity:"特大",
+    fraudDesc:"泽达易盛作为科创板首批因重大违法强制退市的科技企业，主营业务聚焦医药健康信息化与智能制造领域，依托医药信息化行业 “业务链条复 杂、项目验收周期长、关联交易隐蔽” 的经营特点，通过虚构业务合同、隐瞒关联交易、虚假披露股权代持等方式实施系统性财务造假，造假贯穿 IPO 发行及上市后持续经营阶段；AI 则依托其原有造假路径，结合医药信息化行业的项目运作逻辑、股权结构特征与信息披露要求，对虚构业务、 关",
+    aiDesc:"AI依托医药信息化行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对泽达易盛的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"泽达易盛原财务造假手段来源中国证券监督管理委员会行政处罚决定书： https://www.csrc.gov.cn/csrc/c101928/c7516119/content.shtml" },
+  { company:"聚石化学", industry:"化工/改性塑料", industryCode:"chemical",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI模拟真实交易背景材料", "AI生成客户信用评估报告", "AI优化收入确认时间节点"],
+    anti:["行业收入基准对比模型", "多维数据交叉验证", "客户侧独立核实"],
+    fraudType:"revenue", year:2022, severity:"重大",
+    fraudDesc:"聚石化学作为聚焦改性塑料、化学助剂等产品的化工企业，依托化工行业 “贸易业务资金往来密集、货权流转灵活、跨主体交易核查难度大” 的 经营特点，通过三类无商业实质的虚假贸易业务虚增营收与成本，同时存在关联交易未披露、内控治理不规范等问题，形成 “虚假贸易空转 + 关 联交易隐瞒” 的典型化工企业财务造假模式；AI 则依托其原有造假路径，结合化工行业的贸易逻辑、货权流转规则与财务核算要求，对虚假贸易 ",
+    aiDesc:"AI依托化工/改性塑料行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对聚石化学的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"聚石化学原财务造假手段来源东方财富网虚增收入 1.57 亿元！聚石化学财务造假坐实，公司及责任人被重罚： https://finance.eastmoney.com/a/202602043641467522.html" },
+  { company:"蓝山科技", industry:"光通信", industryCode:"it",
+    fraud:["虚增银行存款余额", "虚构\n研发支出"],
+    ai:["AI批量生成虚假合同单据", "AI仿真收入数据规避检测", "多版本财务数据智能生成"],
+    anti:["交易模式异常检测", "资金流向穿透核查", "收入确认时点验证"],
+    fraudType:"revenue", year:2019, severity:"重大",
+    fraudDesc:"蓝山科技作为新三板创新层企业，利用光通信行业研发投入大、供应链条长的特点，在 2017 年至 2019 年期间实施全链条系统性财务造假， 并在 2020 年精选层公开发行文件中编造重大虚假内容。公司通过虚增银行存款余额、利用隐性关联方虚构无实物流转的采购销售循环业务、虚构 研发支出、虚列运费支出等方式，累计虚增销售收入 8.11 亿元、虚增利润总额 8848.32 万元、虚增资产数亿元，其中 20",
+    aiDesc:"AI依托光通信行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对蓝山科技的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"北京蓝山原财务造假手段来源于中国证监会行政处罚决定书、市场禁入决定书等权威披露信息，后续链接顺序按上述罗列内容依次对应(即第一至五条链接对应中国证监会行政处罚决定书，第六条对应市场禁入决定书)：1.https://www.csrc.gov.cn/csrc/c101928/c1659089/content.shtml2,https://www.csrc" },
+  { company:"领信股份", industry:"软件/IT", industryCode:"it",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2023, severity:"重大",
+    fraudDesc:"领信股份作为软件和信息技术服务企业，利用软件项目交付周期长、验收节点主观性强、客户分散的行业特点，在 2021 年至 2023 年期间实 施系统性财务造假。公司通过 11 家外部公司开展虚假业务虚增收入、利润；通过将实质未开展或未完成项目虚构为已完成项目的方式虚增收入、 利润。2021 年虚增收入 16,381.63 万元、虚增利润 9,813.96 万元，2022 年虚增收入 12,719.05",
+    aiDesc:"AI依托软件/IT行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对领信股份的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"领信信息科技原财务造假手段来源于山东证监局行政处罚决定书、行政监管措施决定书等权威披露信息，后续链接顺序按上述罗列内容依次对应(即第一至五条链接对应山东证监局行政处罚决定书，第六条对应行政监管措施决定书)：1.https://www.csrc.gov.cn/shandong/c104216/c7505633/content.shtml2.https:" },
+  { company:"赛特斯", industry:"通信/云计算", industryCode:"it",
+    fraud:["财务数据造假", "信息披露违规"],
+    ai:["AI模拟真实交易背景材料", "AI生成客户信用评估报告", "AI优化收入确认时间节点"],
+    anti:["行业收入基准对比模型", "多维数据交叉验证", "客户侧独立核实"],
+    fraudType:"revenue", year:2023, severity:"重大",
+    fraudDesc:"赛特斯作为北交所挂牌后终止挂牌的信息科技企业，主营业务聚焦通信网络优化、云计算服务等领域，依托科技行业 “项目验收周期长、收入 确认复杂、审计依赖专业判断” 的经营特点，存在未按期披露年度报告的重大信息披露违规，且科创板 IPO 阶段中介机构因执业漏洞被监管警示， 暴露出其财务信息披露与合规管理的核心缺陷；AI 则依托其原有违规路径，结合信息科技行业的业务逻辑、IPO 审核要求与信息披露规则，对年",
+    aiDesc:"AI依托通信/云计算行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对赛特斯的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"赛特斯原财务造假手段来源中国证券监督管理委员会行政处罚决定书： https://www.csrc.gov.cn/csrc/c101928/c7608132/content.shtml" },
+  { company:"厦门路桥信息", industry:"智慧交通", industryCode:"it",
+    fraud:["虚构销售业务"],
+    ai:["AI批量生成虚假合同单据", "AI仿真收入数据规避检测", "多版本财务数据智能生成"],
+    anti:["交易模式异常检测", "资金流向穿透核查", "收入确认时点验证"],
+    fraudType:"revenue", year:2024, severity:"重大",
+    fraudDesc:"厦门路桥信息股份有限公司作为智慧交通领域的北交所上市公司，在 2023 年至 2024 年期间通过签订虚假合同、虚构销售业务、提前确认收 入等手段实施系统性财务造假。2023 年虚增营业收入 1583.60 万元（占营收 6.66%） 、虚增利润 1530.71 万元（占利润总额 73.57%） ；2024 年虚增 营业收入 2576.40 万元（占营收 10.71%） 、虚增利润 2245.93",
+    aiDesc:"AI依托智慧交通行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对厦门路桥信息的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"路桥信息原财务造假手段来源于中国证监会厦门监管局行政处罚决定书、警示函，后续链接顺序按上述罗列内容依次对应（即第一条链接对" },
+  { company:"广道数字", industry:"信息安全/软件", industryCode:"it",
+    fraud:["伪造购销合同"],
+    ai:["AI虚构业务链条全流程", "AI生成配套物流凭证", "智能规避审计抽查算法"],
+    anti:["关联方图谱穿透分析", "NLP内容一致性分析", "物流信息真实性核验"],
+    fraudType:"revenue", year:2024, severity:"重大",
+    fraudDesc:"广道数字作为软件和信息技术服务业企业，聚焦信息安全、情报分析及信息化平台建设相关业务，借软件产品研发与销售的业务特殊性（无 形产品核查难度大、项目验收流程复杂、资金往来与项目进度绑定度高） ，通过伪造购销合同、发票、银行回单等全套虚假凭证，虚构销售与采 购业务，2018 年至 2024 年上半年累计虚增营收 14.66 亿元、虚增营业成本 7.54 亿元，各期虚增比例均超 83%，同时存在拦截审计",
+    aiDesc:"AI依托信息安全/软件行业特点，针对原有造假路径进行仿真升级，通过批量生成虚假单据、模拟行业基准数据等方式，大幅提升造假隐蔽性。",
+    antiDesc:"针对广道数字的造假特征，需从数据逻辑一致性、行业基准偏离度和操作行为异常等维度进行AI辅助甄别。",
+    penalty:"广道数字原财务造假手段来源于搜狐北交所首例重大违法退市案深度剖析、深圳市广道数字技术股份有限公司关于公司收到中国证券监督管" },
+  { company:"兴源环境", industry:"环保/生态", industryCode:"material",
+    fraud:["PPP项目虚增收入及成本", "连续7年年报虚假记载", "收购标的业绩承诺造假"],
+    ai:["AI设计隐蔽PPP成本虚增路径", "AI生成虚假工程进度证明材料", "AI平滑跨期数据合规包装"],
+    anti:["PPP项目成本合理性验证", "工程进度佐证材料穿透核查", "多期财务数据勾稽验证"],
+    fraudType:"revenue", year:2017, severity:"一般",
+    fraudDesc:"全资子公司在PPP项目中通过虚增项目收入及成本，2016年虚增营收9063万元、利润2202万元，2017年虚增营收2.68亿元、利润3636万元，导致2016年至2022年连续7份年报存在虚假记载。",
+    aiDesc:"兴源环境的AI升级路径依托PPP项目核算主观性强的特点，通过多层分包分散虚假成本，生成完整证据链，并将虚增利润平滑分布各期，规避单期异常引发关注。",
+    antiDesc:"需从PPP项目单位成本基准对比、工程进度文件一致性、跨期财务勾稽关系等维度进行AI辅助甄别，识别长期系统性造假痕迹。",
+    penalty:"2024年1月，证监会对兴源环境责令改正、警告并罚款200万元，时任财务总监被警告并罚款80万元，后续面临2017年至2023年间受损投资者索赔诉讼。" },
+  { company:"海越能源", industry:"能源/贸易", industryCode:"chemical",
+    fraud:["控股股东非经营性资金占用未披露", "错误总额法确认收入虚增营收", "控股股东组织指使造假退市"],
+    ai:["AI设计多层资金清洗占用路径", "AI生成预付货款商业背景材料", "AI设计资金滚动回填系统"],
+    anti:["预付货款最终流向穿透追踪", "总额法适用条件穿透核查", "资金临时回填异常模式监测"],
+    fraudType:"fund", year:2022, severity:"重大",
+    fraudDesc:"在控股股东组织指使下，通过向供应商预付货款形式将资金转出供控股股东使用，2021年3.78亿元、2022年6.88亿元未按规定披露；同时错误使用总额法虚增营收30.21亿元（占更正前营收49.33%），最终触及重大违法强制退市。",
+    aiDesc:"海越能源的AI升级路径结合大宗贸易资金量大的特点，通过多层壳公司清洗资金占用路径，生成虚假贸易背景材料，并设计报告期末资金回填系统规避期末余额异常监管。",
+    antiDesc:"需从预付货款全链路追踪、总额法控制权转移真实性核验、资金期末异常波动监测等维度进行穿透核查，识别以贸易为名的资金占用行为。",
+    penalty:"公司及相关责任人合计被罚款1230万元，控股股东被罚300万元，时任董事长被罚250万元；股票因连续两年年报被出具无法表示意见，2025年6月被终止上市（强制退市）。" },
+];
+
+const INDUSTRY_LABELS = {
+  all:'全部行业', pharma:'医药/医疗', it:'信息技术', agri:'农业/水产',
+  chemical:'化工/化学', manufacture:'装备/制造', transport:'交通/能源',
+  food:'食品/农业', material:'建材/生态', retail:'零售/消费',
+  realestate:'房地产', culture:'传媒/文化', auto:'汽车/通航'
+};
+
+const TYPE_LABELS = { all:'全部类型', revenue:'收入虚增', asset:'资产操纵', disclosure:'信息披露', fund:'资金违规' };
+
+let activeIndustry = 'all';
+let activeType = 'all';
+let searchText = '';
+
+function initCases() {
+  const fr = document.getElementById('filterRow');
+  const industryKeys = ['all','pharma','it','agri','chemical','manufacture','transport','food','material','retail','realestate','culture','auto'];
+  const typeKeys = ['all','revenue','asset','disclosure','fund'];
+
+  let html = '<span style="font-size:11px;color:var(--text3);margin-right:4px;line-height:2">行业：</span>';
+  industryKeys.forEach(k => {
+    html += `<span class="filter-chip ${k==='all'?'active':''}" data-group="industry" data-val="${k}" onclick="setFilter('industry','${k}',this)">${INDUSTRY_LABELS[k]}</span>`;
+  });
+  html += '<span style="font-size:11px;color:var(--text3);margin-left:8px;margin-right:4px;line-height:2">类型：</span>';
+  typeKeys.forEach(k => {
+    html += `<span class="filter-chip ${k==='all'?'active':''}" data-group="type" data-val="${k}" onclick="setFilter('type','${k}',this)">${TYPE_LABELS[k]}</span>`;
+  });
+  fr.innerHTML = html;
+  renderCases();
+}
+
+function setFilter(group, val, el) {
+  document.querySelectorAll(`.filter-chip[data-group="${group}"]`).forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  if (group === 'industry') activeIndustry = val;
+  else activeType = val;
+  renderCases();
+}
+
+function filterCases() {
+  searchText = document.getElementById('searchInput').value.toLowerCase();
+  renderCases();
+}
+
+function renderCases() {
+  let filtered = CASES.filter(c => {
+    const matchIndustry = activeIndustry === 'all' || c.industryCode === activeIndustry;
+    const matchType = activeType === 'all' || c.fraudType === activeType;
+    const matchSearch = !searchText || c.company.includes(searchText) ||
+      c.industry.toLowerCase().includes(searchText) ||
+      c.fraud.some(f => f.toLowerCase().includes(searchText)) ||
+      c.anti.some(a => a.toLowerCase().includes(searchText));
+    return matchIndustry && matchType && matchSearch;
+  });
+
+  document.getElementById('caseCount').textContent = `共找到 ${filtered.length} 个匹配案例`;
+  const grid = document.getElementById('caseGrid');
+  const noResult = document.getElementById('noResult');
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '';
+    noResult.style.display = 'block';
+    return;
+  }
+  noResult.style.display = 'none';
+  grid.innerHTML = filtered.map((c, i) => `
+    <div class="case-card" onclick="openDetail(${CASES.indexOf(c)})">
+      <div class="case-industry">${c.industry} · A股上市 · ${c.year}年</div>
+      <div class="case-company">${c.company}</div>
+      <div class="case-row">
+        <div class="case-row-lbl">原有造假手段</div>
+        ${c.fraud.map(f=>`<span class="fraud-tag">${f}</span>`).join('')}
+      </div>
+      <div class="case-row">
+        <div class="case-row-lbl">AI 升级路径</div>
+        ${c.ai.map(a=>`<span class="ai-tag">${a}</span>`).join('')}
+      </div>
+      <div class="case-row">
+        <div class="case-row-lbl">有效反制技术</div>
+        ${c.anti.map(a=>`<span class="anti-tag-c">${a}</span>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function openDetail(idx) {
+  const c = CASES[idx];
+  document.getElementById('dCompany').textContent = c.company;
+  document.getElementById('dMeta').textContent = `${c.industry} · ${c.year}年 · 违规级别：${c.severity}`;
+  document.getElementById('dFraud').innerHTML = c.fraud.map(f=>`<span class="fraud-tag">${f}</span>`).join('');
+  document.getElementById('dFraudDesc').textContent = c.fraudDesc;
+  document.getElementById('dAi').innerHTML = c.ai.map(a=>`<span class="ai-tag">${a}</span>`).join('');
+  document.getElementById('dAiDesc').textContent = c.aiDesc;
+  document.getElementById('dAnti').innerHTML = c.anti.map(a=>`<span class="anti-tag-c">${a}</span>`).join('');
+  document.getElementById('dAntiDesc').textContent = c.antiDesc;
+  document.getElementById('dPenalty').textContent = '📋 处罚情况：' + c.penalty;
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+function closeDetail(e) {
+  if (e.target === document.getElementById('detailOverlay')) closeDetailDirect();
+}
+function closeDetailDirect() {
+  document.getElementById('detailOverlay').classList.remove('open');
+}
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'compare' && !window.chartsBuilt) { buildCharts(); window.chartsBuilt = true; }
+  if (id === 'cases' && !window.casesInited) { initCases(); window.casesInited = true; }
+}
+
+function buildCharts() {
+  new Chart(document.getElementById('radarChart'), {
+    type: 'radar',
+    data: {
+      labels: ['准确率', '可解释性', '实时性', '可扩展性', '成本效益', '行业适配'],
+      datasets: [
+        { label: 'AE神经网络', data: [84,40,75,85,55,70], borderColor: '#1a7a54', backgroundColor: 'rgba(26,122,84,0.1)', pointBackgroundColor: '#1a7a54', borderWidth: 2 },
+        { label: '深度强化学习', data: [99,35,95,90,30,80], borderColor: '#1a5fa8', backgroundColor: 'rgba(26,95,168,0.1)', pointBackgroundColor: '#1a5fa8', borderWidth: 2 },
+        { label: '区块链溯源', data: [95,95,60,70,25,85], borderColor: '#9a6200', backgroundColor: 'rgba(154,98,0,0.1)', pointBackgroundColor: '#9a6200', borderWidth: 2 },
+        { label: '交易模式分析', data: [80,80,80,75,65,90], borderColor: '#b5456e', backgroundColor: 'rgba(181,69,110,0.1)', pointBackgroundColor: '#b5456e', borderWidth: 2 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { r: { min: 0, max: 100, ticks: { font: { size: 10 }, stepSize: 25 }, pointLabels: { font: { size: 12 } } } }
+    }
+  });
+  new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+      labels: ['收入虚增', '资产减值操纵', '信息披露造假', '资金违规', '关联方交易'],
+      datasets: [
+        { label: '交易模式分析', data: [88,72,65,80,85], backgroundColor: '#b5456e' },
+        { label: 'AE神经网络', data: [82,90,55,70,68], backgroundColor: '#1a7a54' },
+        { label: 'NLP舆情监测', data: [60,45,88,55,62], backgroundColor: '#1a5fa8' },
+        { label: '区块链溯源', data: [70,65,75,95,90], backgroundColor: '#9a6200' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { font: { size: 11 } } },
+        y: { min: 0, max: 100, ticks: { callback: v => v + '%', font: { size: 11 } } }
+      }
+    }
+  });
+}
+
+const recMap = {
+  large: {
+    revenue: { rich: { high: { techs: ['深度强化学习检测系统','交易模式分析','多模态融合检测','NLP舆情监测'], reason: '大型上市公司数据充足，优先部署高精度AI系统，配合多模态交叉验证，形成覆盖数据层、行为层、舆情层的完整防线。' }, medium: { techs: ['自编码器神经网络','交易模式分析','NLP舆情监测'], reason: '中等预算下，AE神经网络与交易模式分析可协同部署，覆盖主要收入造假场景。' }, low: { techs: ['自编码器神经网络','交易模式分析'], reason: '优先部署无监督检测模型，成本可控且效果稳定。' } }, limited: { high: { techs: ['自编码器神经网络','交易模式分析','区块链数字指纹溯源'], reason: '数据有限时，自编码器无监督学习仍可有效发现收入异常，区块链补充溯源能力。' }, medium: { techs: ['自编码器神经网络','交易模式分析'], reason: '核心配置，覆盖收入虚增的主要检测需求。' }, low: { techs: ['信息披露异常分布检验'], reason: '数据有限且预算低，统计方法是最经济可行的起点。' } } },
+    asset: { rich: { high: { techs: ['深度强化学习检测系统','信息披露异常分布检验','区块链数字指纹溯源'], reason: '资产减值操纵需结合行业基准数据库与全量模型复算，区块链确保减值底稿不可篡改。' }, medium: { techs: ['自编码器神经网络','信息披露异常分布检验'], reason: '中等预算下的有效组合。' }, low: { techs: ['信息披露异常分布检验'], reason: '统计方法在资产减值参数异常识别上具有较好的可解释性。' } }, limited: { high: { techs: ['自编码器神经网络','信息披露异常分布检验'], reason: '' }, medium: { techs: ['信息披露异常分布检验'], reason: '' }, low: { techs: ['信息披露异常分布检验'], reason: '' } } },
+    disclosure: { rich: { high: { techs: ['NLP舆情监测','多模态融合检测','信息披露异常分布检验'], reason: '信息披露造假以时效性和完整性为核心，NLP实时监测是首选，多模态融合识别AI生成的虚假文件。' }, medium: { techs: ['NLP舆情监测','信息披露异常分布检验'], reason: '两项技术形成双重机制。' }, low: { techs: ['信息披露异常分布检验','NLP舆情监测'], reason: '低成本核心配置。' } }, limited: { high: { techs: ['NLP舆情监测','信息披露异常分布检验'], reason: '' }, medium: { techs: ['信息披露异常分布检验'], reason: '' }, low: { techs: ['信息披露异常分布检验'], reason: '' } } },
+    fund: { rich: { high: { techs: ['区块链数字指纹溯源','交易模式分析','深度强化学习检测系统'], reason: '资金违规需要不可篡改的溯源能力，区块链是核心底层技术，配合AI实现实时异常识别。' }, medium: { techs: ['交易模式分析','区块链数字指纹溯源'], reason: '资金流向穿透+溯源的高效组合。' }, low: { techs: ['交易模式分析'], reason: '交易模式分析可识别资金往来中的关联方异常。' } }, limited: { high: { techs: ['区块链数字指纹溯源','交易模式分析'], reason: '' }, medium: { techs: ['交易模式分析'], reason: '' }, low: { techs: ['交易模式分析'], reason: '' } } },
+    all: { rich: { high: { techs: ['深度强化学习检测系统','区块链数字指纹溯源','多模态融合检测','NLP舆情监测'], reason: '全面防控建议构建分层防御体系：深度强化学习为核心引擎，区块链为数据基础设施，多模态+NLP形成立体感知网络。' }, medium: { techs: ['自编码器神经网络','交易模式分析','NLP舆情监测','区块链数字指纹溯源'], reason: '四维协同防控，覆盖数据异常、行为模式、舆情信号、溯源取证。' }, low: { techs: ['信息披露异常分布检验','交易模式分析','NLP舆情监测'], reason: '三项基础技术的高性价比组合。' } }, limited: { high: { techs: ['自编码器神经网络','交易模式分析','区块链数字指纹溯源'], reason: '' }, medium: { techs: ['自编码器神经网络','交易模式分析'], reason: '' }, low: { techs: ['信息披露异常分布检验','支持向量机'], reason: '' } } }
+  },
+  medium: {
+    revenue: { rich: { high: { techs: ['自编码器神经网络','交易模式分析','NLP舆情监测'], reason: '中型企业的均衡选择，三技术互补覆盖收入造假主要场景。' }, medium: { techs: ['自编码器神经网络','交易模式分析'], reason: '核心双技术组合，性价比高。' }, low: { techs: ['信息披露异常分布检验','交易模式分析'], reason: '低成本高可解释性配置。' } }, limited: { high: { techs: ['支持向量机','信息披露异常分布检验'], reason: '' }, medium: { techs: ['信息披露异常分布检验','支持向量机'], reason: '' }, low: { techs: ['信息披露异常分布检验'], reason: '' } } },
+    asset: { rich: { high: { techs: ['自编码器神经网络','信息披露异常分布检验'], reason: '中型企业资产减值防控的均衡配置。' }, medium: { techs: ['信息披露异常分布检验'], reason: '' }, low: { techs: ['信息披露异常分布检验'], reason: '' } }, limited: { high: { techs: ['信息披露异常分布检验'], reason: '' }, medium: { techs: ['信息披露异常分布检验'], reason: '' }, low: { techs: ['信息披露异常分布检验'], reason: '' } } },
+    disclosure: { rich: { high: { techs: ['NLP舆情监测','信息披露异常分布检验'], reason: '中型企业披露造假防控的核心配置。' }, medium: { techs: ['信息披露异常分布检验','NLP舆情监测'], reason: '' }, low: { techs: ['信息披露异常分布检验'], reason: '' } }, limited: { high: { techs: ['信息披露异常分布检验'], reason: '' }, medium: { techs: ['信息披露异常分布检验'], reason: '' }, low: { techs: ['信息披露异常分布检验'], reason: '' } } },
+    fund: { rich: { high: { techs: ['交易模式分析','区块链数字指纹溯源'], reason: '中型企业资金违规防控的有效组合。' }, medium: { techs: ['交易模式分析'], reason: '' }, low: { techs: ['交易模式分析'], reason: '' } }, limited: { high: { techs: ['交易模式分析'], reason: '' }, medium: { techs: ['交易模式分析'], reason: '' }, low: { techs: ['交易模式分析'], reason: '' } } },
+    all: { rich: { high: { techs: ['自编码器神经网络','交易模式分析','NLP舆情监测'], reason: '中型企业全面防控的最优组合。' }, medium: { techs: ['自编码器神经网络','交易模式分析'], reason: '' }, low: { techs: ['信息披露异常分布检验','交易模式分析'], reason: '' } }, limited: { high: { techs: ['信息披露异常分布检验','支持向量机'], reason: '' }, medium: { techs: ['信息披露异常分布检验'], reason: '' }, low: { techs: ['信息披露异常分布检验'], reason: '' } } }
+  },
+  small: {
+    revenue: { rich: { high: { techs: ['信息披露异常分布检验','支持向量机'], reason: '小型企业以低成本、高可解释技术为主。' }, medium: { techs: ['信息披露异常分布检验','支持向量机'], reason: '' }, low: { techs: ['信息披露异常分布检验'], reason: '' } }, limited: { high: { techs: ['信息披露异常分布检验'], reason: '' }, medium: { techs: ['信息披露异常分布检验'], reason: '' }, low: { techs: ['信息披露异常分布检验'], reason: '' } } },
+    asset: { rich: { high: { techs: ['信息披露异常分布检验'], reason: '小型企业以统计方法为核心。' }, medium: { techs: ['信息披露异常分布检验'], reason: '' }, low: { techs: ['信息披露异常分布检验'], reason: '' } }, limited: { high: { techs: ['信息披露异常分布检验'], reason: '' }, medium: { techs: ['信息披露异常分布检验'], reason: '' }, low: { techs: ['信息披露异常分布检验'], reason: '' } } },
+    disclosure: { rich: { high: { techs: ['信息披露异常分布检验','NLP舆情监测'], reason: '小型企业可利用NLP工具进行舆情基础监测。' }, medium: { techs: ['信息披露异常分布检验'], reason: '' }, low: { techs: ['信息披露异常分布检验'], reason: '' } }, limited: { high: { techs: ['信息披露异常分布检验'], reason: '' }, medium: { techs: ['信息披露异常分布检验'], reason: '' }, low: { techs: ['信息披露异常分布检验'], reason: '' } } },
+    fund: { rich: { high: { techs: ['交易模式分析'], reason: '小型企业关注关联方交易异常。' }, medium: { techs: ['交易模式分析'], reason: '' }, low: { techs: ['交易模式分析'], reason: '' } }, limited: { high: { techs: ['交易模式分析'], reason: '' }, medium: { techs: ['交易模式分析'], reason: '' }, low: { techs: ['交易模式分析'], reason: '' } } },
+    all: { rich: { high: { techs: ['信息披露异常分布检验','支持向量机','NLP舆情监测'], reason: '小型企业全面防控的轻量化方案。' }, medium: { techs: ['信息披露异常分布检验','支持向量机'], reason: '' }, low: { techs: ['信息披露异常分布检验'], reason: '' } }, limited: { high: { techs: ['信息披露异常分布检验'], reason: '' }, medium: { techs: ['信息披露异常分布检验'], reason: '' }, low: { techs: ['信息披露异常分布检验'], reason: '' } } }
+  }
+};
+
+const techDesc = {
+  '深度强化学习检测系统': '99%以上检测精度，Wolpertinger架构支持复杂大规模场景，自适应迭代能力强',
+  '自编码器神经网络': '无监督异常评分，重构误差识别偏离正常模式的账目，网络越深性能越优',
+  '支持向量机': 'RBF核函数处理非线性财务时序数据，适合标注数据稀缺的中小企业场景',
+  '信息披露异常分布检验': '统计方法直接可解释，成本最低，作为第一层筛查工具性价比最高',
+  '区块链数字指纹溯源': '操作全程留痕，数据不可篡改，完整记录修改历史，为合规审计与法律取证提供可靠证据链',
+  'NLP舆情监测': '实时抓取财经新闻与社交媒体，与企业披露数据交叉验证，提供外部视角预警',
+  '交易模式分析': '识别虚假关联交易中时间集中性、金额规律性等行为特征，跨行业通用',
+  '多模态融合检测': '融合文本、图像、音视频多维证据，全面对抗AI生成的跨模态造假链条'
+};
+
+function generateRec() {
+  const size = document.getElementById('sel-size').value;
+  const risk = document.getElementById('sel-risk').value;
+  const data = document.getElementById('sel-data').value;
+  const budget = document.getElementById('sel-budget').value;
+  if (!size || !risk || !data || !budget) { alert('请完整填写所有选项后再生成推荐'); return; }
+  let result = { techs: ['信息披露异常分布检验', '交易模式分析'], reason: '建议从基础技术起步，逐步完善反造假体系。' };
+  try {
+    const node = recMap[size][risk][data][budget];
+    if (node && node.techs) result = node;
+    if (!result.reason) result.reason = '根据企业特征匹配的最优技术组合，建议按优先级逐步引入。';
+  } catch(e) {}
+  document.getElementById('rec-heading').textContent = '推荐技术组合（共 ' + result.techs.length + ' 项）';
+  document.getElementById('rec-stack').innerHTML = result.techs.map((t, i) =>
+    `<div class="rec-item">
+      <span class="rec-rank">#${i+1}</span>
+      <div>
+        <div class="rec-tech">${t}</div>
+        <div class="rec-reason">${techDesc[t] || ''}</div>
+      </div>
+    </div>`
+  ).join('');
+  document.getElementById('rec-note').textContent = '方案说明：' + result.reason;
+  document.getElementById('rec-result').classList.add('show');
+  // 若推荐方案含区块链，显示链证留痕引用条
+  const hasChain = result.techs.some(t => t.includes('区块链'));
+  document.getElementById('chain-tip').style.display = hasChain ? 'block' : 'none';
+  document.getElementById('rec-result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+</script>
+</body>
+</html>
